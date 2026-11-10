@@ -453,19 +453,37 @@
       }
     }
 
-    async function refreshCloudData() {
-      if (!SCRIPT_URL || SCRIPT_URL.includes("example")) return;
-      try {
-        const res = await fetch(SCRIPT_URL);
-        const json = await res.json();
-        if (json.status === "SUCCESS") {
-          cloudJournalLogs = json.data || [];
-          renderHistoryForTicker();
-        }
-      } catch (e) {
-        console.error("Gagal memuat log cloud:", e);
+   async function refreshCloudData() {
+  if (!SCRIPT_URL || SCRIPT_URL.includes("example")) return;
+  try {
+    const res = await fetch(SCRIPT_URL);
+    const json = await res.json();
+    if (json.status === "SUCCESS") {
+      cloudJournalLogs = json.data || [];
+      
+      // Sinkronkan data emiten aktif langsung dari log Sheets ke HP/Laptop
+      const logs = cloudJournalLogs.filter(l => l.ticker === activeTicker);
+      if (logs.length > 0) {
+        const latest = logs[logs.length - 1];
+        const state = tickerStates[activeTicker];
+        if (latest.current_status) state.status = latest.current_status;
+        if (latest.entry_price) state.avg = latest.entry_price;
+        if (latest.lot_size) state.lot = latest.lot_size;
+        if (latest.entry_box) state.entryBox = latest.entry_box;
+        if (latest.sl_line) state.slLine = latest.sl_line;
+        if (latest.tp_line) state.tpLine = latest.tp_line;
+        if (latest.trailing_stop) state.trailingStop = latest.trailing_stop;
+        if (latest.daily_closing_summary) state.reason = latest.daily_closing_summary;
+        
+        localStorage.setItem('trading_states', JSON.stringify(tickerStates));
       }
+
+      renderActiveTickerUI();
     }
+  } catch (e) {
+    console.error("Gagal memuat log cloud:", e);
+  }
+}
 
     function renderHistoryForTicker() {
       const logs = cloudJournalLogs.filter(l => l.ticker === activeTicker);
