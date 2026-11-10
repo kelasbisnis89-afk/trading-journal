@@ -569,8 +569,7 @@
         });
       });
     }
-
-    // GEMINI VISION API INTEGRATION
+// GEMINI VISION API INTEGRATION (ROBUST VERSION)
     async function runGeminiVisionAnalysis(cpKey) {
       const apiKey = localStorage.getItem('gemini_api_key');
       if (!apiKey) {
@@ -591,58 +590,67 @@
       btn.disabled = true;
 
       try {
-        const base64Data = imgBase64Full.split(',')[1];
-        const mimeType = imgBase64Full.split(';')[0].split(':')[1];
+        const parts = imgBase64Full.split(',');
+        const mimeType = parts[0].match(/:(.*?);/)[1];
+        const base64Data = parts[1];
 
-        const promptText = `
-Anda adalah Sekretaris Trading Saham Indonesia profesional untuk saham: ${activeTicker}.
-Analisis screenshot Stockbit ini (Orderbook, Chart Bollinger Band + ADX, dan Broker Summary).
-Berikan output HANYA format JSON murni tanpa markdown, tanpa backtick:
+        const promptText = `Anda adalah Sekretaris Trading Saham profesional untuk ticker: ${activeTicker}.
+Analisis gambar tangkapan layar Stockbit ini (Orderbook, Chart BB/ADX, Broker Summary).
+Berikan output HANYA sebuah objek JSON murni (tanpa tanda kutip tiga backtick markdown, tanpa tulisan pembuka/penutup):
 {
   "current_price": 2840,
-  "signal": "BUY AKUMULASI" | "WAIT & SEE" | "HOLD" | "CUT LOSS",
-  "reason": "Alasan singkat 1 kalimat berbasis bandarmologi dan support",
+  "signal": "BUY AKUMULASI",
+  "reason": "Penjelasan ringkas 1 kalimat atas aksi ini",
   "entry_box": "2820 - 2850",
   "sl_line": 2800,
   "tp_line": 2920,
   "trailing_stop": 2860
-}
-`;
+}`;
 
-        const requestBody = {
-          contents: [{
-            parts: [
-              { text: promptText },
-              { inline_data: { mime_type: mimeType, data: base64Data } }
-            ]
-          }]
-        };
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        const resp = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: promptText },
+                { inline_data: { mime_type: mimeType, data: base64Data } }
+              ]
+            }],
+            generationConfig: {
+              response_mime_type: "application/json"
+            }
+          })
         });
 
         const result = await resp.json();
-        const rawResponse = result.candidates[0].content.parts[0].text;
-        const cleanedJson = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(cleanedJson);
 
-        // Update state
+        if (result.error) {
+          throw new Error(result.error.message || JSON.stringify(result.error));
+        }
+
+        if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
+          throw new Error("Respon kosong dari AI. Periksa kembali API Key atau gambar.");
+        }
+
+        let rawResponse = result.candidates[0].content.parts[0].text;
+        rawResponse = rawResponse.replace(/```json/gi, '').replace(/```/gi, '').trim();
+        const parsed = JSON.parse(rawResponse);
+
         const state = tickerStates[activeTicker];
-        state.currentPrice = parsed.current_price || state.currentPrice;
-        state.signal = parsed.signal;
-        state.reason = parsed.reason;
-        state.entryBox = parsed.entry_box || state.entryBox;
-        state.slLine = parsed.sl_line || state.slLine;
-        state.tpLine = parsed.tp_line || state.tpLine;
-        state.trailingStop = parsed.trailing_stop || state.trailingStop;
+        if (parsed.current_price) state.currentPrice = parsed.current_price;
+        state.signal = parsed.signal || "WAIT & SEE";
+        state.reason = parsed.reason || "Analisis selesai.";
+        state.entryBox = parsed.entry_box || "-";
+        state.slLine = parsed.sl_line || "-";
+        state.tpLine = parsed.tp_line || "-";
+        state.trailingStop = parsed.trailing_stop || "-";
 
         localStorage.setItem('trading_states', JSON.stringify(tickerStates));
         renderActiveTickerUI();
 
-        // Push ke Google Sheet
         saveRecordToSheets({
           ticker: activeTicker,
           date: new Date().toISOString().split('T')[0],
@@ -656,14 +664,15 @@ Berikan output HANYA format JSON murni tanpa markdown, tanpa backtick:
           daily_closing_summary: state.reason
         });
 
-        alert(`Analisis Gemini AI Selesai!\nSinyal: ${parsed.signal}\nEntry Box: ${parsed.entry_box}\nSL: ${parsed.sl_line} | TP: ${parsed.tp_line}`);
+        alert(`Analisis Gemini AI Berhasil!\n\nSinyal: ${parsed.signal}\nEntry Box: ${parsed.entry_box}\nStop Loss: ${parsed.sl_line}\nTarget TP: ${parsed.tp_line}`);
       } catch (err) {
-        alert("Gagal memanggil Gemini API: " + err.message);
+        alert("Gagal memanggil Gemini API:\n" + err.message);
       } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
       }
     }
+    
 
     async function saveRecordToSheets(payload) {
       try {
