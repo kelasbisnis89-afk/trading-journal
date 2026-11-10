@@ -15,8 +15,8 @@
 </head>
 <body class="min-h-screen flex flex-col bg-[#0b0f17] text-slate-200">
 
-  <!-- TOP NAVIGATION BAR -->
-  <header class="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+  <!-- HEADER -->
+  <header class="border-b border-slate-800 bg-[#0f172a]/90 backdrop-blur sticky top-0 z-50 px-4 py-3">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-blue-500/20">
@@ -24,42 +24,41 @@
         </div>
         <div>
           <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
-            Trading Secretary AI <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">CLOUD & VISION ACTIVE</span>
+            Trading Secretary AI <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">ONLINE</span>
           </h1>
-          <p class="text-xs text-slate-400">Jurnal Runtut 3 Checkpoint & Pengawal Posisi Otomatis</p>
+          <p class="text-xs text-slate-400">Jurnal Runtut 3 Checkpoint & Vision Trading Assistant</p>
         </div>
       </div>
 
-      <!-- Action Buttons -->
       <div class="flex items-center gap-2">
         <button id="btnSetApiKey" onclick="openApiKeyModal()" class="text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
           <span>🔑</span> <span id="apiKeyStatusLabel">Setup Gemini API</span>
         </button>
-        <button onclick="fetchWatchlistAndRecords()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
-          <span>🔄</span> Refresh Data
+        <button onclick="fetchWatchlistAndRecords()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg font-medium transition">
+          🔄 Refresh
         </button>
-        <button onclick="openPositionModal()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg font-semibold shadow-md shadow-blue-600/30 transition flex items-center gap-1.5">
-          <span>💼</span> Atur Posisi (<span id="activeTickerBtnLabel">BBRI</span>)
+        <button onclick="openPositionModal()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg font-semibold shadow-md shadow-blue-600/30 transition">
+          💼 Atur Posisi (<span id="activeTickerBtnLabel">BBRI</span>)
         </button>
         <button onclick="addNewTickerPrompt()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg font-medium transition">
-          + Saham Baru
+          + Saham
         </button>
       </div>
     </div>
 
-    <!-- TICKER WATCHLIST SELECTOR -->
+    <!-- WATCHLIST SELECTOR -->
     <div class="max-w-7xl mx-auto mt-3 pt-2 border-t border-slate-800/60 flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1" id="tickerBar">
       <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Watchlist:</span>
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
+  <!-- MAIN VIEW -->
   <main class="max-w-7xl mx-auto w-full p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
 
-    <!-- LEFT COLUMN: ACTIVE STATUS & 3 CHECKPOINTS (7 COLS) -->
+    <!-- LEFT COLUMN (7 COLS) -->
     <div class="lg:col-span-7 flex flex-col gap-6">
 
-      <!-- CURRENT POSITION SUMMARY CARD -->
+      <!-- POSITION CARD -->
       <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-5 relative overflow-hidden shadow-xl">
         <div class="absolute -right-8 -top-8 text-8xl font-black text-slate-800/20 select-none pointer-events-none mono" id="bgTickerWatermark">
           BBRI
@@ -73,14 +72,14 @@
                 BELUM PUNYA BARANG (CASH)
               </span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
+            <p class="text-xs text-slate-400 mt-1">
               Harga Acuan Pasar: <span class="font-bold text-slate-200 mono" id="marketPriceDisplay">Rp -</span>
             </p>
           </div>
 
           <div class="flex items-center gap-4 bg-[#0b0f17]/60 border border-slate-800/80 px-4 py-2.5 rounded-xl">
             <div>
-              <div class="text-[10px] uppercase font-bold text-slate-400">Average Masuk</div>
+              <div class="text-[10px] uppercase font-bold text-slate-400">Avg Masuk</div>
               <div class="text-sm font-bold text-white mono" id="valAvgPrice">-</div>
             </div>
             <div class="h-6 w-px bg-slate-800"></div>
@@ -91,12 +90,12 @@
             <div class="h-6 w-px bg-slate-800"></div>
             <div>
               <div class="text-[10px] uppercase font-bold text-slate-400">Floating P/L</div>
-              <div class="text-sm font-bold mono text-slate-400" id="valFloatingPnl">0.00% (Standby)</div>
+              <div class="text-sm font-bold mono text-slate-400" id="valFloatingPnl">0.00%</div>
             </div>
           </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-slate-800/60 text-xs text-slate-400 flex items-start gap-2 bg-slate-900/40 p-3 rounded-lg" id="continuitySummaryBox">
+        <div class="mt-4 pt-3 border-t border-slate-800/60 text-xs text-slate-400 flex items-start gap-2 bg-slate-900/40 p-3 rounded-lg">
           <span class="text-amber-400 text-base">📌</span>
           <div>
             <span class="font-bold text-slate-300">Riwayat Kemarin Terbawa:</span> 
@@ -105,15 +104,15 @@
         </div>
       </div>
 
-      <!-- 3 CHECKPOINTS -->
+      <!-- 3 CHECKPOINTS ACCORDION -->
       <div class="space-y-4">
         <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
-          <span>Alur Harian 3 Checkpoint (Terkoneksi ke Google Sheets & AI)</span>
+          <span>Alur Harian 3 Checkpoint</span>
           <span class="text-[11px] font-normal text-slate-400">Paste Gambar: <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">Ctrl + V</kbd></span>
         </h2>
 
-        <!-- CHECKPOINT 1: PRE-MARKET (08:30) -->
-        <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-4 transition-all focus-within:border-blue-500/50" id="cp1_container">
+        <!-- CP 1 -->
+        <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-800/60">
             <div class="flex items-center gap-2.5">
               <span class="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold text-xs flex items-center justify-center">1</span>
@@ -128,9 +127,622 @@
           <div class="mt-3 space-y-3">
             <div id="drop_cp1" onclick="triggerPastePrompt('cp1')" tabindex="0" class="border-2 border-dashed border-slate-700 hover:border-blue-500/50 bg-[#0b0f17]/50 rounded-xl p-3 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:border-blue-500">
               <span class="text-xl">📸</span>
-              <p class="text-xs text-slate-300 font-medium">Klik kotak ini lalu tekan <span class="text-blue-400 font-bold">Ctrl + V</span> untuk paste tangkapan layar Stockbit</p>
-              <p class="text-[10px] text-slate-400" id="cp1_img_name">Orderbook + Chart BB/ADX + Broker Summary</p>
+              <p class="text-xs text-slate-300 font-medium">Klik kotak ini lalu tekan <span class="text-blue-400 font-bold">Ctrl + V</span> untuk paste screenshot</p>
               <img id="preview_cp1" class="hidden max-h-48 rounded-lg mt-2 border border-slate-700 shadow-md">
             </div>
 
-            <button id="btnAiCp1" onclick="runGeminiVisionAnalysis('cp1')" class="w-full bg-gradient-to-r
+            <button id="btnAiCp1" onclick="runGeminiVisionAnalysis('cp1')" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold py-2 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+              <span>🤖</span> Analisis Gambar via Gemini AI
+            </button>
+          </div>
+        </div>
+
+        <!-- CP 2 -->
+        <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800/60">
+            <div class="flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-xs flex items-center justify-center">2</span>
+              <div>
+                <h3 class="text-sm font-bold text-white">30 Mnt Pasca Open (09:30 WIB) — Validasi</h3>
+                <p class="text-[11px] text-slate-400">Daya Haka vs Cabut Bid & Konfirmasi Masuk</p>
+              </div>
+            </div>
+            <span id="cp2_badge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Standby</span>
+          </div>
+
+          <div class="mt-3 space-y-3">
+            <div id="drop_cp2" onclick="triggerPastePrompt('cp2')" tabindex="0" class="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 bg-[#0b0f17]/50 rounded-xl p-3 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:border-emerald-500">
+              <span class="text-xl">📊</span>
+              <p class="text-xs text-slate-300 font-medium">Klik kotak ini lalu tekan <span class="text-emerald-400 font-bold">Ctrl + V</span> untuk paste screenshot 09:30</p>
+              <img id="preview_cp2" class="hidden max-h-48 rounded-lg mt-2 border border-slate-700 shadow-md">
+            </div>
+
+            <button id="btnAiCp2" onclick="runGeminiVisionAnalysis('cp2')" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold py-2 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+              <span>🤖</span> Validasi Eksekusi 09:30 via Gemini AI
+            </button>
+          </div>
+        </div>
+
+        <!-- CP 3 -->
+        <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800/60">
+            <div class="flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-xs flex items-center justify-center">3</span>
+              <div>
+                <h3 class="text-sm font-bold text-white">Sesi Siang (13:30 WIB) — Kawal Posisi</h3>
+                <p class="text-[11px] text-slate-400">Tentukan Trailing Stop atau Kunci Profit Sore</p>
+              </div>
+            </div>
+            <span id="cp3_badge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Standby</span>
+          </div>
+
+          <div class="mt-3 space-y-3">
+            <div id="drop_cp3" onclick="triggerPastePrompt('cp3')" tabindex="0" class="border-2 border-dashed border-slate-700 hover:border-amber-500/50 bg-[#0b0f17]/50 rounded-xl p-3 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:border-amber-500">
+              <span class="text-xl">🛡️</span>
+              <p class="text-xs text-slate-300 font-medium">Klik kotak ini lalu tekan <span class="text-amber-400 font-bold">Ctrl + V</span> untuk paste screenshot 13:30</p>
+              <img id="preview_cp3" class="hidden max-h-48 rounded-lg mt-2 border border-slate-700 shadow-md">
+            </div>
+
+            <button id="btnAiCp3" onclick="runGeminiVisionAnalysis('cp3')" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold py-2 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+              <span>🤖</span> Evaluasi Sesi Siang via Gemini AI
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN (5 COLS) -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+
+      <!-- BINARY ACTION CARD -->
+      <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Aksi Biner & TradingView</h2>
+        
+        <div class="mt-4 bg-[#0b0f17] border border-slate-800/90 rounded-xl p-4 text-center">
+          <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Keputusan Sekretaris</div>
+          <div class="text-2xl font-black mt-1 mono" id="actionSignalText">WAIT & SEE</div>
+          <p class="text-xs text-slate-400 mt-2" id="actionSignalReason">
+            Paste screenshot Checkpoint 1 (08:30) lalu klik Analisis Gemini AI.
+          </p>
+        </div>
+
+        <div class="mt-5 space-y-3">
+          <div class="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            Koordinat Gambar di TradingView:
+          </div>
+
+          <!-- GREEN BOX -->
+          <div class="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-3.5 h-3.5 rounded bg-emerald-500 shadow-sm"></div>
+              <div>
+                <div class="text-xs font-bold text-emerald-400">Kotak Hijau (Entry Zone)</div>
+                <div class="text-[10px] text-slate-400">Area pasang antrean beli</div>
+              </div>
+            </div>
+            <div class="text-sm font-black mono text-emerald-300" id="coordEntryBox">-</div>
+          </div>
+
+          <!-- RED LINE -->
+          <div class="bg-rose-950/20 border border-rose-500/30 rounded-xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-3.5 h-1 rounded bg-rose-500 shadow-sm"></div>
+              <div>
+                <div class="text-xs font-bold text-rose-400">Garis Merah (Stop Loss / Batal)</div>
+                <div class="text-[10px] text-slate-400">Rencana gugur jika candle tembus</div>
+              </div>
+            </div>
+            <div class="text-sm font-black mono text-rose-300" id="coordSlLine">-</div>
+          </div>
+
+          <!-- BLUE LINE -->
+          <div class="bg-blue-950/20 border border-blue-500/30 rounded-xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-3.5 h-1 rounded bg-blue-500 shadow-sm"></div>
+              <div>
+                <div class="text-xs font-bold text-blue-400">Garis Biru (Target TP)</div>
+                <div class="text-[10px] text-slate-400">Tembok resistensi / jemuran jual</div>
+              </div>
+            </div>
+            <div class="text-sm font-black mono text-blue-300" id="coordTpLine">-</div>
+          </div>
+
+          <!-- ORANGE LINE -->
+          <div class="bg-amber-950/20 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-3.5 h-1 rounded bg-amber-500 shadow-sm"></div>
+              <div>
+                <div class="text-xs font-bold text-amber-400">Level Trailing Stop:</div>
+                <div class="text-[10px] text-slate-400">Proteksi profit berjalan</div>
+              </div>
+            </div>
+            <div class="text-sm font-black mono text-amber-300" id="coordTrailingStop">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMELINE ARSIP -->
+      <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-5 shadow-xl flex-1 flex flex-col">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Arsip Riwayat Emiten Ini</h2>
+        <div class="space-y-2 overflow-y-auto max-h-80 custom-scrollbar pr-1 flex-1" id="timelineList">
+          <div class="text-xs text-slate-400 text-center py-6">Belum ada riwayat tersimpan.</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL: POSITION -->
+  <div id="positionModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-[#131b2e] border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>💼</span> Atur Posisi: <span class="mono text-blue-400" id="modalTickerTitle">BBRI</span>
+        </h3>
+        <button onclick="closePositionModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="mt-4 space-y-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-300">Status Kepemilikan Saham</label>
+          <select id="modalStatusSelect" onchange="toggleModalLotFields()" class="w-full mt-1.5 bg-[#0b0f17] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="CASH">⚪ BELUM PUNYA BARANG (CASH)</option>
+            <option value="IN_POSITION">🟢 SEDANG MEMILIKI BARANG</option>
+          </select>
+        </div>
+
+        <div id="modalPositionFields" class="space-y-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-300">Harga Modal Beli (Avg)</label>
+            <input type="number" id="modalAvgPrice" placeholder="cth: 2840" class="w-full mt-1.5 bg-[#0b0f17] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white mono">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-300">Jumlah Volume (Lot)</label>
+            <input type="number" id="modalLotCount" placeholder="cth: 100" class="w-full mt-1.5 bg-[#0b0f17] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white mono">
+          </div>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button onclick="savePositionState()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2.5 rounded-xl transition">
+            Simpan
+          </button>
+          <button onclick="closePositionModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2.5 rounded-xl transition">
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: API KEY -->
+  <div id="apiKeyModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-[#131b2e] border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>🔑</span> Setup Gemini API Key
+        </h3>
+        <button onclick="closeApiKeyModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <p class="text-xs text-slate-300">
+          Masukkan Google AI Studio API Key Anda. Disimpan secara lokal di browser komputer Anda.
+        </p>
+        <div>
+          <label class="text-xs font-semibold text-slate-400">Gemini API Key</label>
+          <input type="password" id="inputApiKeyVal" placeholder="AIzaSy..." class="w-full mt-1.5 bg-[#0b0f17] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white mono">
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button onclick="saveApiKey()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl transition">
+            Simpan Kunci
+          </button>
+          <button onclick="closeApiKeyModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2.5 rounded-xl transition">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CORE JAVASCRIPT -->
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyK7Cp4jdLkMk08Y4-tkRUqRxn2YQOIROYHFrogfo5fYSleGuGRQPR2OsQxQgoTjkAjLg/exec";
+
+    let watchlist = ["BBRI", "BBCA", "BMRI", "TLKM", "PTBA"];
+    let activeTicker = "BBRI";
+    let activeImages = { cp1: null, cp2: null, cp3: null };
+    let tickerStates = {};
+    let cloudJournalRecords = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedLocalSettings();
+      setupPasteListeners();
+      renderTickerBar();
+      updateApiKeyUI();
+      fetchWatchlistAndRecords();
+    });
+
+    function loadSavedLocalSettings() {
+      const savedWl = localStorage.getItem('trading_wl');
+      if (savedWl) {
+        try { watchlist = JSON.parse(savedWl); } catch(e){}
+      }
+      const savedStates = localStorage.getItem('trading_states');
+      if (savedStates) {
+        try { tickerStates = JSON.parse(savedStates); } catch(e){}
+      }
+      ensureTickerState(activeTicker);
+    }
+
+    function ensureTickerState(ticker) {
+      if (!tickerStates[ticker]) {
+        tickerStates[ticker] = {
+          status: "CASH",
+          avg: 0,
+          lot: 0,
+          currentPrice: 0,
+          entryBox: "-",
+          slLine: "-",
+          tpLine: "-",
+          trailingStop: "-",
+          signal: "WAIT & SEE",
+          reason: "Siapkan data Checkpoint 1 Pre-Market."
+        };
+      }
+    }
+
+    function renderTickerBar() {
+      const bar = document.getElementById('tickerBar');
+      if (!bar) return;
+      bar.innerHTML = '<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Watchlist:</span>';
+      watchlist.forEach(t => {
+        const btn = document.createElement('button');
+        const isActive = t === activeTicker;
+        btn.className = `text-xs px-3.5 py-1.5 rounded-xl font-bold mono transition flex items-center gap-1.5 ${
+          isActive ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+        }`;
+        btn.innerHTML = `<span>${t}</span>`;
+        btn.onclick = () => selectTicker(t);
+        bar.appendChild(btn);
+      });
+
+      document.getElementById('activeTickerBtnLabel').innerText = activeTicker;
+      document.getElementById('activeTickerDisplay').innerText = activeTicker;
+      document.getElementById('bgTickerWatermark').innerText = activeTicker;
+      renderActiveTickerUI();
+    }
+
+    function selectTicker(ticker) {
+      activeTicker = ticker;
+      ensureTickerState(ticker);
+      renderTickerBar();
+      renderTimeline();
+    }
+
+    function renderActiveTickerUI() {
+      const state = tickerStates[activeTicker];
+      const badge = document.getElementById('badgePositionStatus');
+      const valAvg = document.getElementById('valAvgPrice');
+      const valLot = document.getElementById('valLotCount');
+      const valPnl = document.getElementById('valFloatingPnl');
+
+      if (state.status === "IN_POSITION" && state.avg > 0) {
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        badge.innerText = "SEDANG MEMILIKI BARANG";
+        valAvg.innerText = "Rp " + Number(state.avg).toLocaleString();
+        valLot.innerText = Number(state.lot).toLocaleString() + " Lot";
+
+        if (state.currentPrice > 0) {
+          const diffPct = ((state.currentPrice - state.avg) / state.avg) * 100;
+          valPnl.className = `text-sm font-bold mono ${diffPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+          valPnl.innerText = `${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%`;
+        } else {
+          valPnl.innerText = "Terkawal";
+        }
+      } else {
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700";
+        badge.innerText = "BELUM PUNYA BARANG (CASH)";
+        valAvg.innerText = "-";
+        valLot.innerText = "0 Lot";
+        valPnl.innerText = "0.00%";
+        valPnl.className = "text-sm font-bold mono text-slate-400";
+      }
+
+      document.getElementById('actionSignalText').innerText = state.signal || "WAIT & SEE";
+      document.getElementById('actionSignalReason').innerText = state.reason || "Lakukan analisa Checkpoint 1.";
+      document.getElementById('coordEntryBox').innerText = state.entryBox || "-";
+      document.getElementById('coordSlLine').innerText = state.slLine || "-";
+      document.getElementById('coordTpLine').innerText = state.tpLine || "-";
+      document.getElementById('coordTrailingStop').innerText = state.trailingStop || "-";
+    }
+
+    // CLOUD SYNC
+    async function fetchWatchlistAndRecords() {
+      try {
+        const resp = await fetch(`${SCRIPT_URL}?type=all`);
+        const json = await resp.json();
+        if (json.status === "SUCCESS") {
+          if (json.watchlist && json.watchlist.length > 0) {
+            watchlist = Array.from(new Set([...watchlist, ...json.watchlist]));
+            localStorage.setItem('trading_wl', JSON.stringify(watchlist));
+            renderTickerBar();
+          }
+          if (json.data) {
+            cloudJournalRecords = json.data;
+            renderTimeline();
+            inspectLastDayContext();
+          }
+        }
+      } catch (err) {
+        console.warn("Cloud sync error/delay:", err);
+      }
+    }
+
+    function inspectLastDayContext() {
+      const records = cloudJournalRecords.filter(r => r.ticker === activeTicker);
+      if (records.length > 0) {
+        const latest = records[records.length - 1];
+        document.getElementById('continuityText').innerText = 
+          `Status Terakhir (${latest.date}): ${latest.current_status}. TP: ${latest.tp_line || '-'}, SL: ${latest.sl_line || '-'}. ${latest.daily_closing_summary || ''}`;
+      }
+    }
+
+    function renderTimeline() {
+      const container = document.getElementById('timelineList');
+      const filtered = cloudJournalRecords.filter(r => r.ticker === activeTicker);
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Belum ada arsip tersimpan untuk ${activeTicker}.</div>`;
+        return;
+      }
+      container.innerHTML = "";
+      filtered.slice().reverse().forEach(item => {
+        const div = document.createElement('div');
+        div.className = "bg-[#0b0f17] border border-slate-800 rounded-xl p-3 text-xs space-y-1.5";
+        div.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-200 mono">${item.date}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.current_status === 'IN_POSITION' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-300'}">${item.current_status}</span>
+          </div>
+          <div class="grid grid-cols-3 gap-1 text-[11px] mono pt-1 text-slate-400">
+            <div>Entry: <span class="text-emerald-400">${item.entry_box || '-'}</span></div>
+            <div>SL: <span class="text-rose-400">${item.sl_line || '-'}</span></div>
+            <div>TP: <span class="text-blue-400">${item.tp_line || '-'}</span></div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // PASTE EVENT (CTRL+V)
+    let currentPasteTarget = 'cp1';
+    function triggerPastePrompt(target) {
+      currentPasteTarget = target;
+      const el = document.getElementById(`drop_${target}`);
+      if (el) el.focus();
+    }
+
+    function setupPasteListeners() {
+      ['drop_cp1', 'drop_cp2', 'drop_cp3'].forEach((id, idx) => {
+        const cpKey = `cp${idx+1}`;
+        const elem = document.getElementById(id);
+        if (!elem) return;
+        elem.addEventListener('paste', (e) => {
+          const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+          for (let item of items) {
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+              const file = item.getAsFile();
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                activeImages[cpKey] = event.target.result;
+                const preview = document.getElementById(`preview_${cpKey}`);
+                preview.src = event.target.result;
+                preview.classList.remove('hidden');
+                document.getElementById(`${cpKey}_badge`).innerText = "Gambar Terpasang";
+                document.getElementById(`${cpKey}_badge`).className = "text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30";
+              };
+              reader.readAsDataURL(file);
+              e.preventDefault();
+              break;
+            }
+          }
+        });
+      });
+    }
+
+    // GEMINI VISION CALL (STABLE)
+    async function runGeminiVisionAnalysis(cpKey) {
+      const apiKey = localStorage.getItem('gemini_api_key');
+      if (!apiKey) {
+        openApiKeyModal();
+        alert("Silakan masukkan Google AI Studio API Key terlebih dahulu.");
+        return;
+      }
+
+      const imgBase64Full = activeImages[cpKey];
+      if (!imgBase64Full) {
+        alert("Silakan klik kotak checkpoint lalu paste (Ctrl+V) screenshot Stockbit terlebih dahulu!");
+        return;
+      }
+
+      const btn = document.getElementById(cpKey === 'cp1' ? 'btnAiCp1' : cpKey === 'cp2' ? 'btnAiCp2' : 'btnAiCp3');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span>⏳</span> Menganalisis...';
+      btn.disabled = true;
+
+      try {
+        const parts = imgBase64Full.split(',');
+        const mimeType = parts[0].match(/:(.*?);/)[1];
+        const base64Data = parts[1];
+
+        const promptText = `Peran: Anda Sekretaris Trading Saham profesional untuk emiten: ${activeTicker}.
+Analisis gambar ini (Orderbook, Chart BB/ADX, Broker Summary).
+Keluarkan HANYA JSON murni tanpa markdown, tanpa teks pembuka/penutup:
+{
+  "current_price": 2840,
+  "signal": "BUY AKUMULASI",
+  "reason": "Penjelasan ringkas 1 kalimat aksi",
+  "entry_box": "2820 - 2850",
+  "sl_line": 2800,
+  "tp_line": 2920,
+  "trailing_stop": 2860
+}`;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: promptText },
+                { inline_data: { mime_type: mimeType, data: base64Data } }
+              ]
+            }]
+          })
+        });
+
+        const result = await resp.json();
+
+        if (result.error) {
+          throw new Error(result.error.message || JSON.stringify(result.error));
+        }
+
+        if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
+          throw new Error("Respon kosong dari AI. Periksa kembali API Key.");
+        }
+
+        let raw = result.candidates[0].content.parts[0].text;
+        raw = raw.replace(/```json/gi, '').replace(/```/gi, '').trim();
+        const parsed = JSON.parse(raw);
+
+        const state = tickerStates[activeTicker];
+        if (parsed.current_price) state.currentPrice = parsed.current_price;
+        state.signal = parsed.signal || "WAIT & SEE";
+        state.reason = parsed.reason || "Analisis gambar selesai.";
+        state.entryBox = parsed.entry_box || "-";
+        state.slLine = parsed.sl_line || "-";
+        state.tpLine = parsed.tp_line || "-";
+        state.trailingStop = parsed.trailing_stop || "-";
+
+        localStorage.setItem('trading_states', JSON.stringify(tickerStates));
+        renderActiveTickerUI();
+
+        saveRecordToSheets({
+          ticker: activeTicker,
+          date: new Date().toISOString().split('T')[0],
+          current_status: state.status,
+          entry_price: state.avg,
+          lot_size: state.lot,
+          entry_box: state.entryBox,
+          sl_line: state.slLine,
+          tp_line: state.tpLine,
+          trailing_stop: state.trailingStop,
+          daily_closing_summary: state.reason
+        });
+
+        alert(`Analisis Gemini AI Berhasil!\n\nSinyal: ${parsed.signal}\nEntry Box: ${parsed.entry_box}\nSL: ${parsed.sl_line} | TP: ${parsed.tp_line}`);
+      } catch (err) {
+        alert("Gagal memanggil Gemini API:\n" + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function saveRecordToSheets(payload) {
+      try {
+        payload.action = "SAVE_CHECKPOINT";
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        console.error("Sheets save:", e);
+      }
+    }
+
+    // MODAL HANDLERS
+    function openApiKeyModal() {
+      document.getElementById('inputApiKeyVal').value = localStorage.getItem('gemini_api_key') || "";
+      document.getElementById('apiKeyModal').classList.remove('hidden');
+    }
+    function closeApiKeyModal() { document.getElementById('apiKeyModal').classList.add('hidden'); }
+    function saveApiKey() {
+      const val = document.getElementById('inputApiKeyVal').value.trim();
+      if (val) {
+        localStorage.setItem('gemini_api_key', val);
+        updateApiKeyUI();
+        closeApiKeyModal();
+        alert("API Key berhasil disimpan.");
+      }
+    }
+    function updateApiKeyUI() {
+      const key = localStorage.getItem('gemini_api_key');
+      const label = document.getElementById('apiKeyStatusLabel');
+      if (key && label) {
+        label.innerText = "Gemini AI Siap";
+        label.parentElement.className = "text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5";
+      }
+    }
+
+    function openPositionModal() {
+      ensureTickerState(activeTicker);
+      const state = tickerStates[activeTicker];
+      document.getElementById('modalTickerTitle').innerText = activeTicker;
+      document.getElementById('modalStatusSelect').value = state.status;
+      document.getElementById('modalAvgPrice').value = state.avg || "";
+      document.getElementById('modalLotCount').value = state.lot || "";
+      toggleModalLotFields();
+      document.getElementById('positionModal').classList.remove('hidden');
+    }
+    function closePositionModal() { document.getElementById('positionModal').classList.add('hidden'); }
+    function toggleModalLotFields() {
+      const isPos = document.getElementById('modalStatusSelect').value === "IN_POSITION";
+      document.getElementById('modalPositionFields').style.display = isPos ? 'block' : 'none';
+    }
+    function savePositionState() {
+      const state = tickerStates[activeTicker];
+      state.status = document.getElementById('modalStatusSelect').value;
+      if (state.status === "IN_POSITION") {
+        state.avg = Number(document.getElementById('modalAvgPrice').value) || 0;
+        state.lot = Number(document.getElementById('modalLotCount').value) || 0;
+      } else {
+        state.avg = 0;
+        state.lot = 0;
+      }
+      localStorage.setItem('trading_states', JSON.stringify(tickerStates));
+      renderActiveTickerUI();
+      closePositionModal();
+
+      saveRecordToSheets({
+        ticker: activeTicker,
+        date: new Date().toISOString().split('T')[0],
+        current_status: state.status,
+        entry_price: state.avg,
+        lot_size: state.lot,
+        entry_box: state.entryBox,
+        sl_line: state.slLine,
+        tp_line: state.tpLine,
+        trailing_stop: state.trailingStop,
+        daily_closing_summary: `Update posisi: ${state.status}`
+      });
+    }
+
+    function addNewTickerPrompt() {
+      const val = prompt("Masukkan kode saham baru (cth: ASII, BBNI, INKP):");
+      if (val) {
+        const clean = val.trim().toUpperCase();
+        if (!watchlist.includes(clean)) {
+          watchlist.push(clean);
+          localStorage.setItem('trading_wl', JSON.stringify(watchlist));
+          selectTicker(clean);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
