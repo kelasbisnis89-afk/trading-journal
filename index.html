@@ -3,1171 +3,760 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trading Secretary AI - Cloud Journal & Multi-Ticker</title>
+  <title>Trading Secretary AI - Logbook & Vision Assistant</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          },
-          colors: {
-            tradeDark: {
-              950: '#070a12',
-              900: '#0c111d',
-              850: '#111827',
-              800: '#162032',
-              700: '#1f2d45',
-              600: '#2d3f5d'
-            },
-            bull: '#10b981',
-            bear: '#ef4444',
-            tpBlue: '#3b82f6',
-            accentGold: '#f59e0b'
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #070a12; }
-    ::-webkit-scrollbar-thumb { background: #1f2d45; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #2d3f5d; }
-    .paste-zone.dragover { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.12); }
-    .pulse-sync { animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0b0f17; color: #e2e8f0; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
   </style>
 </head>
-<body class="bg-tradeDark-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
+<body class="min-h-screen flex flex-col bg-[#0b0f17] text-slate-200">
 
-  <!-- TOP APP BAR -->
-  <header class="border-b border-tradeDark-700 bg-tradeDark-900/90 backdrop-blur sticky top-0 z-40 px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-blue-500/20">
-        ⚡
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="font-extrabold tracking-tight text-base sm:text-lg text-white">Trading Secretary AI</h1>
-          <span class="text-[10px] uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono font-semibold border border-emerald-500/30 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Google Sheets
-          </span>
+  <!-- TOP NAVIGATION BAR -->
+  <header class="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-blue-500/20">
+          ⚡
         </div>
-        <p class="text-xs text-slate-400">Jurnal Runtut 3 Checkpoint Harian & Pengawal Posisi Multi-Saham</p>
+        <div>
+          <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            Trading Secretary AI <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">CLOUD & VISION ACTIVE</span>
+          </h1>
+          <p class="text-xs text-slate-400">Jurnal Runtut 3 Checkpoint & Pengawal Posisi Otomatis</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2">
+        <button id="btnSetApiKey" onclick="openApiKeyModal()" class="text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
+          <span>🔑</span> <span id="apiKeyStatusLabel">Setup Gemini API</span>
+        </button>
+        <button onclick="fetchWatchlistAndRecords()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
+          <span>🔄</span> Refresh Data
+        </button>
+        <button onclick="openPositionModal()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg font-semibold shadow-md shadow-blue-600/30 transition flex items-center gap-1.5">
+          <span>💼</span> Atur Posisi (<span id="activeTickerBtnLabel">BBRI</span>)
+        </button>
+        <button onclick="addNewTickerPrompt()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg font-medium transition">
+          + Saham Baru
+        </button>
       </div>
     </div>
 
-    <!-- CLOUD STATUS & ACTIONS -->
-    <div class="flex items-center gap-2.5">
-      <!-- Sync Status Badge -->
-      <div id="cloudSyncIndicator" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-tradeDark-800 border border-tradeDark-700 text-xs font-mono text-slate-300">
-        <span class="w-2 h-2 rounded-full bg-emerald-400" id="syncDot"></span>
-        <span id="syncText">Tersambung Cloud</span>
-      </div>
-
-      <button onclick="syncFromCloud()" class="px-3 py-1.5 rounded-lg bg-tradeDark-800 hover:bg-tradeDark-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center gap-1.5" title="Tarik data terbaru dari Google Sheets">
-        <span>🔄</span> <span class="hidden sm:inline">Refresh Data</span>
-      </button>
-
-      <button onclick="openPositionModal()" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition flex items-center gap-1.5 shadow-md shadow-blue-600/30">
-        <span>💼</span> <span>Atur Posisi (<span id="btnTickerTarget">BBRI</span>)</span>
-      </button>
-
-      <button onclick="openAddTickerModal()" class="px-3 py-1.5 rounded-lg bg-tradeDark-800 hover:bg-tradeDark-700 border border-tradeDark-600 text-xs font-bold text-emerald-400 transition flex items-center gap-1">
-        <span>➕</span> <span class="hidden sm:inline">Saham Baru</span>
-      </button>
+    <!-- TICKER WATCHLIST SELECTOR -->
+    <div class="max-w-7xl mx-auto mt-3 pt-2 border-t border-slate-800/60 flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1" id="tickerBar">
+      <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Watchlist:</span>
+      <!-- Ticker pills generated dynamically -->
     </div>
   </header>
 
-  <!-- WATCHLIST TICKER BAR (SCROLLABLE FOR UP TO 10 STOCKS) -->
-  <nav class="bg-tradeDark-900 border-b border-tradeDark-800 px-4 lg:px-8 py-2.5 overflow-x-auto flex items-center gap-2">
-    <span class="text-[11px] font-mono font-bold uppercase text-slate-500 tracking-wider mr-1 shrink-0">WATCHLIST:</span>
-    <div id="tickerChipsContainer" class="flex items-center gap-2 shrink-0">
-      <!-- Generated dynamically -->
-    </div>
-  </nav>
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto w-full p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
 
-  <!-- MAIN VIEWPORT -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+    <!-- LEFT COLUMN: ACTIVE STATUS & 3 CHECKPOINTS (7 COLS) -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
 
-    <!-- HERO POSITION CARD -->
-    <section class="bg-gradient-to-r from-tradeDark-900 via-tradeDark-850 to-slate-900 border border-tradeDark-700 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
-      <div class="absolute -right-8 -bottom-10 opacity-5 pointer-events-none select-none text-9xl font-mono font-black" id="heroWatermark">
-        BBRI
-      </div>
-
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
-        <div class="flex items-start sm:items-center gap-4">
-          <div class="p-3.5 rounded-2xl bg-tradeDark-950 border border-tradeDark-700 flex flex-col items-center justify-center min-w-[80px] shadow-inner">
-            <span class="text-[10px] text-slate-400 font-mono font-bold">EMITEN</span>
-            <span class="text-3xl font-black tracking-wider text-white" id="heroTickerTitle">BBRI</span>
-          </div>
-
+      <!-- CURRENT POSITION SUMMARY CARD -->
+      <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-5 relative overflow-hidden shadow-xl">
+        <div class="absolute -right-8 -top-8 text-8xl font-black text-slate-800/20 select-none pointer-events-none mono" id="bgTickerWatermark">
+          BBRI
+        </div>
+        
+        <div class="flex flex-wrap items-center justify-between gap-4 relative z-10">
           <div>
-            <div class="flex items-center gap-2 mb-1.5">
-              <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Status Kepemilikan:</span>
-              <span id="heroPosStatusBadge" class="text-xs font-mono font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl font-black text-white tracking-wide mono" id="activeTickerDisplay">BBRI</span>
+              <span id="badgePositionStatus" class="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
                 BELUM PUNYA BARANG (CASH)
               </span>
             </div>
-            <div class="flex items-baseline gap-3">
-              <span class="text-xs text-slate-400">Harga Acuan / Pasar:</span>
-              <span id="heroLastPrice" class="text-2xl font-bold font-mono text-white tracking-tight">Rp 0</span>
-              <span id="heroDateStamp" class="text-[11px] text-slate-500 font-mono">-</span>
+            <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
+              Harga Acuan Pasar: <span class="font-bold text-slate-200 mono" id="marketPriceDisplay">Rp -</span>
+            </p>
+          </div>
+
+          <!-- Position Floating Details -->
+          <div class="flex items-center gap-4 bg-[#0b0f17]/60 border border-slate-800/80 px-4 py-2.5 rounded-xl">
+            <div>
+              <div class="text-[10px] uppercase font-bold text-slate-400">Average Masuk</div>
+              <div class="text-sm font-bold text-white mono" id="valAvgPrice">-</div>
+            </div>
+            <div class="h-6 w-px bg-slate-800"></div>
+            <div>
+              <div class="text-[10px] uppercase font-bold text-slate-400">Volume Lot</div>
+              <div class="text-sm font-bold text-white mono" id="valLotCount">0 Lot</div>
+            </div>
+            <div class="h-6 w-px bg-slate-800"></div>
+            <div>
+              <div class="text-[10px] uppercase font-bold text-slate-400">Floating P/L</div>
+              <div class="text-sm font-bold mono text-slate-400" id="valFloatingPnl">0.00% (Standby)</div>
             </div>
           </div>
         </div>
 
-        <!-- POSITION FLOATING PNL STRIP -->
-        <div class="flex flex-wrap items-center gap-4 sm:gap-6 bg-tradeDark-950/80 px-5 py-3.5 rounded-xl border border-tradeDark-700">
+        <!-- Continuity Context Card -->
+        <div class="mt-4 pt-3 border-t border-slate-800/60 text-xs text-slate-400 flex items-start gap-2 bg-slate-900/40 p-3 rounded-lg" id="continuitySummaryBox">
+          <span class="text-amber-400 text-base">📌</span>
           <div>
-            <div class="text-[11px] text-slate-400 font-medium">Average Masuk</div>
-            <div class="text-base font-bold font-mono text-slate-200" id="heroAvgPrice">-</div>
-          </div>
-          <div class="h-8 w-px bg-tradeDark-700 hidden sm:block"></div>
-          <div>
-            <div class="text-[11px] text-slate-400 font-medium">Volume Dimiliki</div>
-            <div class="text-base font-bold font-mono text-slate-200" id="heroLotCount">0 Lot</div>
-          </div>
-          <div class="h-8 w-px bg-tradeDark-700 hidden sm:block"></div>
-          <div>
-            <div class="text-[11px] text-slate-400 font-medium">Floating P/L</div>
-            <div class="text-base font-bold font-mono flex items-center gap-1.5" id="heroPnlValue">
-              <span class="text-slate-400">-</span>
-            </div>
+            <span class="font-bold text-slate-300">Riwayat Kemarin Terbawa:</span> 
+            <span id="continuityText">Belum ada catatan hari sebelumnya. Sistem bersiap untuk Checkpoint 1 Pre-Market.</span>
           </div>
         </div>
       </div>
 
-      <!-- CARRY FORWARD BANNER (CERITA BERSAMBUNG) -->
-      <div id="carryForwardBanner" class="mt-4 pt-3.5 border-t border-tradeDark-700/70 flex items-start gap-2.5 text-xs text-slate-300">
-        <span class="text-accentGold text-base shrink-0">📌</span>
-        <div>
-          <span class="font-bold text-accentGold font-mono uppercase">Riwayat Kemarin Terbawa:</span>
-          <span id="carryForwardText" class="text-slate-300 ml-1">Belum ada riwayat tercatat. Mulai dari Checkpoint 1 (08:30).</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- WORKSPACE 2-COLUMNS: (LEFT 3 CHECKPOINTS, RIGHT TV MARKERS & LOGBOOK) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-      <!-- LEFT: 3 CHECKPOINTS (7 COLS) -->
-      <div class="lg:col-span-7 space-y-5">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <h2 class="text-sm font-bold text-white uppercase tracking-wider font-mono">Alur Harian 3 Checkpoint</h2>
-            <span class="text-xs text-slate-400">(Terkoneksi ke Google Sheets)</span>
-          </div>
-          <span class="text-xs text-blue-400 font-mono bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
-            Paste Gambar (Ctrl+V)
-          </span>
-        </div>
+      <!-- 3 CHECKPOINTS ACCORDION / FORMS -->
+      <div class="space-y-4">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+          <span>Alur Harian 3 Checkpoint (Terkoneksi ke Google Sheets & AI)</span>
+          <span class="text-[11px] font-normal text-slate-400">Paste Gambar: <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">Ctrl + V</kbd></span>
+        </h2>
 
         <!-- CHECKPOINT 1: PRE-MARKET (08:30) -->
-        <div class="bg-tradeDark-900 border border-tradeDark-700 rounded-2xl p-4 sm:p-5 transition hover:border-slate-600 space-y-3.5" id="boxCp1">
-          <div class="flex items-center justify-between">
+        <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-4 transition-all focus-within:border-blue-500/50" id="cp1_container">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800/60">
             <div class="flex items-center gap-2.5">
-              <span class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-bold text-xs flex items-center justify-center">1</span>
+              <span class="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold text-xs flex items-center justify-center">1</span>
               <div>
-                <h3 class="font-bold text-sm text-white">Pre-Market (08:30 WIB) — Peta Tempur</h3>
+                <h3 class="text-sm font-bold text-white">Pre-Market (08:30 WIB) — Peta Tempur</h3>
                 <p class="text-[11px] text-slate-400">Orderbook, Tembok Antrean Kemarin & Skenario Entry</p>
               </div>
             </div>
-            <span id="badgeCp1" class="text-[11px] font-mono px-2 py-0.5 rounded bg-tradeDark-950 text-slate-400 border border-tradeDark-700">Standby</span>
+            <span id="cp1_badge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Standby</span>
           </div>
 
-          <!-- DROP/PASTE ZONE -->
-          <div class="paste-zone border-2 border-dashed border-tradeDark-700 rounded-xl p-3 text-center cursor-pointer hover:border-blue-500 transition relative bg-tradeDark-950/70"
-               onclick="triggerFilePick(1)">
-            <input type="file" id="fileInput1" accept="image/*" class="hidden" onchange="handleImagePicked(event, 1)">
-            <div id="previewZone1" class="hidden relative">
-              <img id="imgPreview1" src="" alt="CP1 Preview" class="max-h-48 rounded-lg mx-auto object-contain border border-tradeDark-700">
-              <button onclick="clearImage(event, 1)" class="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-500 text-white rounded-md px-2 py-1 text-[11px] font-bold shadow">Hapus</button>
+          <div class="mt-3 space-y-3">
+            <!-- Paste Drop Area -->
+            <div id="drop_cp1" onclick="triggerPastePrompt('cp1')" tabindex="0" class="border-2 border-dashed border-slate-700 hover:border-blue-500/50 bg-[#0b0f17]/50 rounded-xl p-3 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:border-blue-500">
+              <span class="text-xl">📸</span>
+              <p class="text-xs text-slate-300 font-medium">Klik kotak ini lalu tekan <span class="text-blue-400 font-bold">Ctrl + V</span> untuk paste tangkapan layar Stockbit</p>
+              <p class="text-[10px] text-slate-400" id="cp1_img_name">Orderbook + Chart BB/ADX + Broker Summary</p>
+              <img id="preview_cp1" class="hidden max-h-48 rounded-lg mt-2 border border-slate-700 shadow-md">
             </div>
-            <div id="placeholderZone1" class="py-2.5">
-              <span class="text-xl block mb-0.5">📋</span>
-              <p class="text-xs text-slate-300">Klik upload atau <span class="text-blue-400 font-bold underline">Ctrl + V</span> tangkapan layar Stockbit 3-Panel</p>
-            </div>
-          </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
-            <div>
-              <label class="block text-[11px] text-slate-400 font-mono mb-1">Harga Closing Kemarin</label>
-              <input type="number" id="inPrice1" placeholder="cth: 2820" class="w-full bg-tradeDark-950 border border-tradeDark-700 rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-[11px] text-slate-400 font-mono mb-1">Tembok Resist / Offer</label>
-              <input type="number" id="inResist1" placeholder="cth: 2900" class="w-full bg-tradeDark-950 border border-tradeDark-700 rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
-            </div>
-            <div class="col-span-2 sm:col-span-1 flex items-end">
-              <button onclick="commitCheckpoint(1)" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2 px-3 rounded-lg transition shadow-md flex items-center justify-center gap-1.5">
-                <span>⚡</span> Simpan 08:30
+            <!-- AI Vision Action Button -->
+            <div class="flex gap-2">
+              <button id="btnAiCp1" onclick="runGeminiVisionAnalysis('cp1')" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold py-2 rounded-xl shadow-lg shadow-purple-600/20 transition flex items-center justify-center gap-2">
+                <span>🤖</span> Analisis Gambar via Gemini AI
               </button>
             </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-[10px] uppercase font-bold text-slate-400">Harga Closing Kemarin</label>
+                <input type="number" id="input_cp1_close" placeholder="cth: 2820" class="w-full mt-1 bg-[#0b0f17] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white mono focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="text-[10px] uppercase font-bold text-slate-400">Tembok Resist / Offer</label>
+                <input type="number" id="input_cp1_wall" placeholder="cth: 2900" class="w-full mt-1 bg-[#0b0f17] border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white mono focus:outline-none focus:border-blue-500">
+              </div>
+            </div>
+
+            <button onclick="saveManualCheckpoint(1)" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2 rounded-xl transition flex items-center justify-center gap-1.5">
+              <span>💾</span> Simpan Log Checkpoint 1 ke Cloud
+            </button>
           </div>
         </div>
 
-        <!-- CHECKPOINT 2: 09:30 POST-OPEN -->
-        <div class="bg-tradeDark-900 border border-tradeDark-700 rounded-2xl p-4 sm:p-5 transition hover:border-slate-600 space-y-3.5" id="boxCp2">
-          <div class="flex items-center justify-between">
+        <!-- CHECKPOINT 2: POST-OPEN (09:30) -->
+        <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-4 transition-all focus-within:border-emerald-500/50" id="cp2_container">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800/60">
             <div class="flex items-center gap-2.5">
-              <span class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono font-bold text-xs flex items-center justify-center">2</span>
+              <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-xs flex items-center justify-center">2</span>
               <div>
-                <h3 class="font-bold text-sm text-white">30 Mnt Pasca Open (09:30 WIB) — Validasi</h3>
+                <h3 class="text-sm font-bold text-white">30 Mnt Pasca Open (09:30 WIB) — Validasi</h3>
                 <p class="text-[11px] text-slate-400">Daya Haka vs Cabut Bid & Konfirmasi Masuk</p>
               </div>
             </div>
-            <span id="badgeCp2" class="text-[11px] font-mono px-2 py-0.5 rounded bg-tradeDark-950 text-slate-400 border border-tradeDark-700">Standby</span>
+            <span id="cp2_badge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Standby</span>
           </div>
 
-          <div class="paste-zone border-2 border-dashed border-tradeDark-700 rounded-xl p-3 text-center cursor-pointer hover:border-blue-500 transition relative bg-tradeDark-950/70"
-               onclick="triggerFilePick(2)">
-            <input type="file" id="fileInput2" accept="image/*" class="hidden" onchange="handleImagePicked(event, 2)">
-            <div id="previewZone2" class="hidden relative">
-              <img id="imgPreview2" src="" alt="CP2 Preview" class="max-h-48 rounded-lg mx-auto object-contain border border-tradeDark-700">
-              <button onclick="clearImage(event, 2)" class="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-500 text-white rounded-md px-2 py-1 text-[11px] font-bold shadow">Hapus</button>
+          <div class="mt-3 space-y-3">
+            <div id="drop_cp2" onclick="triggerPastePrompt('cp2')" tabindex="0" class="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 bg-[#0b0f17]/50 rounded-xl p-3 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:border-emerald-500">
+              <span class="text-xl">📊</span>
+              <p class="text-xs text-slate-300 font-medium">Paste screenshot jam 09:30 untuk konfirmasi order running</p>
+              <img id="preview_cp2" class="hidden max-h-48 rounded-lg mt-2 border border-slate-700 shadow-md">
             </div>
-            <div id="placeholderZone2" class="py-2.5">
-              <span class="text-xl block mb-0.5">⏱️</span>
-              <p class="text-xs text-slate-300">Paste screenshot jam 09:30 untuk konfirmasi order running</p>
-            </div>
-          </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
-            <div>
-              <label class="block text-[11px] text-slate-400 font-mono mb-1">Harga Running 09:30</label>
-              <input type="number" id="inPrice2" placeholder="cth: 2840" class="w-full bg-tradeDark-950 border border-tradeDark-700 rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-[11px] text-slate-400 font-mono mb-1">Arus Tape Read</label>
-              <select id="inTape2" class="w-full bg-tradeDark-950 border border-tradeDark-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-sans focus:border-blue-500 focus:outline-none">
-                <option value="HAKA_DOMINAN">🔥 Haka Dominan (Makan Kanan)</option>
-                <option value="NETRAL">⚖️ Imbang / Konsolidasi</option>
-                <option value="GUYUR_HAKI">🚨 Guyur Haki / Cabut Bid</option>
-              </select>
-            </div>
-            <div class="col-span-2 sm:col-span-1 flex items-end">
-              <button onclick="commitCheckpoint(2)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 px-3 rounded-lg transition shadow-md flex items-center justify-center gap-1.5">
-                <span>🎯</span> Validasi 09:30
-              </button>
-            </div>
+            <button id="btnAiCp2" onclick="runGeminiVisionAnalysis('cp2')" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold py-2 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2">
+              <span>🤖</span> Validasi Eksekusi 09:30 via Gemini AI
+            </button>
           </div>
         </div>
 
-        <!-- CHECKPOINT 3: 13:30 POST-LUNCH -->
-        <div class="bg-tradeDark-900 border border-tradeDark-700 rounded-2xl p-4 sm:p-5 transition hover:border-slate-600 space-y-3.5" id="boxCp3">
-          <div class="flex items-center justify-between">
+        <!-- CHECKPOINT 3: POST-LUNCH (13:30) -->
+        <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-4 transition-all focus-within:border-amber-500/50" id="cp3_container">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800/60">
             <div class="flex items-center gap-2.5">
-              <span class="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 font-mono font-bold text-xs flex items-center justify-center">3</span>
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold text-xs flex items-center justify-center">3</span>
               <div>
-                <h3 class="font-bold text-sm text-white">Post-Lunch / Sesi 2 (13:30 WIB) — Kawal Posisi</h3>
-                <p class="text-[11px] text-slate-400">Evaluasi Asing Siang, Trailing Stop & Kawal Cuan</p>
+                <h3 class="text-sm font-bold text-white">Sesi Siang (13:30 WIB) — Kawal Posisi</h3>
+                <p class="text-[11px] text-slate-400">Tentukan Trailing Stop atau Kunci Profit Sore</p>
               </div>
             </div>
-            <span id="badgeCp3" class="text-[11px] font-mono px-2 py-0.5 rounded bg-tradeDark-950 text-slate-400 border border-tradeDark-700">Standby</span>
+            <span id="cp3_badge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">Standby</span>
           </div>
 
-          <div class="paste-zone border-2 border-dashed border-tradeDark-700 rounded-xl p-3 text-center cursor-pointer hover:border-blue-500 transition relative bg-tradeDark-950/70"
-               onclick="triggerFilePick(3)">
-            <input type="file" id="fileInput3" accept="image/*" class="hidden" onchange="handleImagePicked(event, 3)">
-            <div id="previewZone3" class="hidden relative">
-              <img id="imgPreview3" src="" alt="CP3 Preview" class="max-h-48 rounded-lg mx-auto object-contain border border-tradeDark-700">
-              <button onclick="clearImage(event, 3)" class="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-500 text-white rounded-md px-2 py-1 text-[11px] font-bold shadow">Hapus</button>
-            </div>
-            <div id="placeholderZone3" class="py-2.5">
-              <span class="text-xl block mb-0.5">🛡️</span>
-              <p class="text-xs text-slate-300">Paste screenshot broker summary & chart sesi siang (13:30)</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
-            <div>
-              <label class="block text-[11px] text-slate-400 font-mono mb-1">Harga Jam 13:30</label>
-              <input type="number" id="inPrice3" placeholder="cth: 2880" class="w-full bg-tradeDark-950 border border-tradeDark-700 rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-[11px] text-slate-400 font-mono mb-1">Arus Asing / Bandar Siang</label>
-              <select id="inForeign3" class="w-full bg-tradeDark-950 border border-tradeDark-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-sans focus:border-blue-500 focus:outline-none">
-                <option value="NET_BUY">🟢 Net Buy Lanjut (Akumulasi)</option>
-                <option value="NET_SELL">🔴 Net Sell / Distribusi</option>
-                <option value="FLAT">⚪ Konsolidasi / Tipis</option>
-              </select>
-            </div>
-            <div class="col-span-2 sm:col-span-1 flex items-end">
-              <button onclick="commitCheckpoint(3)" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs py-2 px-3 rounded-lg transition shadow-md flex items-center justify-center gap-1.5">
-                <span>🛡️</span> Evaluasi 13:30
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT: DIRECTIVE CARD & TIMELINE ARCHIVE (5 COLS) -->
-      <div class="lg:col-span-5 space-y-6">
-
-        <!-- DIRECTIVE / TRADINGVIEW COORDINATE CARD -->
-        <div class="bg-tradeDark-900 border-2 border-blue-500/40 rounded-2xl p-5 shadow-2xl relative">
-          <div class="flex items-center justify-between pb-3 border-b border-tradeDark-700">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-blue-400 animate-ping"></span>
-              <h2 class="font-bold text-sm text-white uppercase font-mono tracking-wider">Aksi Biner & TradingView</h2>
-            </div>
-            <span class="text-[11px] text-slate-400 font-mono" id="dirUpdateTime">Belum dievaluasi</span>
-          </div>
-
-          <!-- PRIMARY ACTION BADGE -->
-          <div class="my-4 p-4 rounded-xl bg-tradeDark-950 border border-tradeDark-700 text-center" id="dirBox">
-            <div class="text-[10px] font-mono uppercase tracking-widest text-slate-400 mb-1">KEPUTUSAN SEKRETARIS</div>
-            <div class="text-3xl font-black font-mono tracking-tight text-amber-400" id="dirText">
-              WAIT & SEE
-            </div>
-            <p class="text-xs text-slate-300 mt-2 font-medium" id="dirSubtext">
-              Jalankan Checkpoint 1 (08:30) untuk menghitung kotak entry dan batas cut loss.
-            </p>
-          </div>
-
-          <!-- TRADINGVIEW VISUAL MARKERS -->
-          <div class="space-y-2.5">
-            <div class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
-              <span>Koordinat Gambar di TradingView:</span>
-              <span class="text-[10px] text-slate-500 font-mono">Terapkan ke Chart</span>
+          <div class="mt-3 space-y-3">
+            <div id="drop_cp3" onclick="triggerPastePrompt('cp3')" tabindex="0" class="border-2 border-dashed border-slate-700 hover:border-amber-500/50 bg-[#0b0f17]/50 rounded-xl p-3 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:border-amber-500">
+              <span class="text-xl">🛡️</span>
+              <p class="text-xs text-slate-300 font-medium">Paste screenshot siang untuk evaluasi trailing stop</p>
+              <img id="preview_cp3" class="hidden max-h-48 rounded-lg mt-2 border border-slate-700 shadow-md">
             </div>
 
-            <!-- Green Box: Entry Zone -->
-            <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30">
-              <div class="flex items-center gap-2.5">
-                <span class="w-3.5 h-3.5 rounded bg-emerald-500 inline-block shadow-sm shadow-emerald-500/50"></span>
-                <div>
-                  <div class="text-xs font-bold text-emerald-400 font-mono">Kotak Hijau (Entry Zone)</div>
-                  <div class="text-[11px] text-slate-400">Area pasang antrean beli</div>
-                </div>
-              </div>
-              <div class="text-sm font-bold font-mono text-emerald-300" id="tvEntryZone">-</div>
-            </div>
-
-            <!-- Red Line: SL / Invalidation -->
-            <div class="flex items-center justify-between p-3 rounded-xl bg-red-950/30 border border-red-500/30">
-              <div class="flex items-center gap-2.5">
-                <span class="w-3.5 h-1.5 rounded-full bg-red-500 inline-block shadow-sm shadow-red-500/50"></span>
-                <div>
-                  <div class="text-xs font-bold text-red-400 font-mono">Garis Merah (Stop Loss / Batal)</div>
-                  <div class="text-[11px] text-slate-400">Rencana gugur jika candle tembus</div>
-                </div>
-              </div>
-              <div class="text-sm font-bold font-mono text-red-300" id="tvStopLoss">-</div>
-            </div>
-
-            <!-- Blue Line: TP / Target -->
-            <div class="flex items-center justify-between p-3 rounded-xl bg-blue-950/30 border border-blue-500/30">
-              <div class="flex items-center gap-2.5">
-                <span class="w-3.5 h-1.5 rounded-full bg-blue-500 inline-block shadow-sm shadow-blue-500/50"></span>
-                <div>
-                  <div class="text-xs font-bold text-blue-400 font-mono">Garis Biru (Target TP)</div>
-                  <div class="text-[11px] text-slate-400">Tembok resistensi / jemuran jual</div>
-                </div>
-              </div>
-              <div class="text-sm font-bold font-mono text-blue-300" id="tvTakeProfit">-</div>
-            </div>
-
-            <!-- Trailing Stop Guard -->
-            <div class="flex items-center justify-between p-2.5 rounded-xl bg-amber-950/20 border border-amber-500/30">
-              <div class="flex items-center gap-2">
-                <span class="text-sm">🛡️</span>
-                <span class="text-xs font-mono font-bold text-amber-300">Level Trailing Stop Pengunci Cuan:</span>
-              </div>
-              <span class="text-xs font-mono font-bold text-amber-300" id="tvTrailingStop">-</span>
-            </div>
-          </div>
-
-          <!-- SECRETARY BRIEF -->
-          <div class="mt-4 pt-3 border-t border-tradeDark-700">
-            <div class="text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
-              <span>🗣️</span> <span>Arahan Sekretaris Hari Ini:</span>
-            </div>
-            <p class="text-xs text-slate-400 leading-relaxed font-sans" id="secBriefText">
-              "Pagi hari sebelum jam 09:00, amati apakah antrean tembok resistensi masih utuh. Jangan Haka sebelum konfirmasi 09:30."
-            </p>
-          </div>
-        </div>
-
-        <!-- TIMELINE ARCHIVE (CERITA BERSAMBUNG) -->
-        <div class="bg-tradeDark-900 border border-tradeDark-700 rounded-2xl p-5 shadow-lg">
-          <div class="flex items-center justify-between mb-3.5">
-            <div class="flex items-center gap-2">
-              <span class="text-base">📖</span>
-              <h3 class="font-bold text-sm text-white">Arsip Logbook Bersambung</h3>
-            </div>
-            <span class="text-[11px] text-slate-400 font-mono" id="archiveCountBadge">0 entri</span>
-          </div>
-
-          <!-- ARCHIVE SCROLLER -->
-          <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1" id="timelineList">
-            <div class="text-center py-8 text-xs text-slate-500 font-mono">
-              Memuat data logbook...
-            </div>
+            <button id="btnAiCp3" onclick="runGeminiVisionAnalysis('cp3')" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold py-2 rounded-xl shadow-lg shadow-amber-600/20 transition flex items-center justify-center gap-2">
+              <span>🤖</span> Evaluasi Posisi Sesi Siang via Gemini AI
+            </button>
           </div>
         </div>
 
       </div>
+    </div>
+
+    <!-- RIGHT COLUMN: ACTION RADAR & TRADINGVIEW COORDINATES (5 COLS) -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+
+      <!-- IMMEDIATE BINARY ACTION CARD -->
+      <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Aksi Biner & TradingView</h2>
+        
+        <div class="mt-4 bg-[#0b0f17] border border-slate-800/90 rounded-xl p-4 text-center">
+          <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Keputusan Sekretaris</div>
+          <div class="text-2xl font-black mt-1 mono" id="actionSignalText">WAIT & SEE</div>
+          <p class="text-xs text-slate-400 mt-2" id="actionSignalReason">
+            Paste screenshot Checkpoint 1 (08:30) lalu klik Analisis Gemini AI untuk memetakan kotak entry.
+          </p>
+        </div>
+
+        <!-- 3 KEY COORDINATES FOR TRADINGVIEW -->
+        <div class="mt-5 space-y-3">
+          <div class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+            <span>Koordinat Gambar di TradingView:</span>
+            <span class="text-[10px] text-blue-400 cursor-pointer hover:underline" onclick="alert('Buka TradingView, gambar Box Hijau sesuai rentang harga, Garis Horisontal Merah untuk SL, dan Biru untuk TP.')">Panduan Visual</span>
+          </div>
+
+          <!-- GREEN BOX (ENTRY ZONE) -->
+          <div class="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-3.5 h-3.5 rounded bg-emerald-500 shadow-sm shadow-emerald-500/50"></div>
+              <div>
+                <div class="text-xs font-bold text-emerald-400">Kotak Hijau (Entry Zone)</div>
+                <div class="text-[10px] text-slate-400">Area pasang antrean beli</div>
+              </div>
+            </div>
+            <div class="text-sm font-black mono text-emerald-300" id="coordEntryBox">-</div>
+          </div>
+
+          <!-- RED LINE (STOP LOSS) -->
+          <div class="bg-rose-950/20 border border-rose-500/30 rounded-xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-3.5 h-1 rounded bg-rose-500 shadow-sm shadow-rose-500/50"></div>
+              <div>
+                <div class="text-xs font-bold text-rose-400">Garis Merah (Stop Loss / Batal)</div>
+                <div class="text-[10px] text-slate-400">Rencana gugur jika candle tembus</div>
+              </div>
+            </div>
+            <div class="text-sm font-black mono text-rose-300" id="coordSlLine">-</div>
+          </div>
+
+          <!-- BLUE LINE (TARGET TAKE PROFIT) -->
+          <div class="bg-blue-950/20 border border-blue-500/30 rounded-xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-3.5 h-1 rounded bg-blue-500 shadow-sm shadow-blue-500/50"></div>
+              <div>
+                <div class="text-xs font-bold text-blue-400">Garis Biru (Target TP)</div>
+                <div class="text-[10px] text-slate-400">Tembok resistensi / jemuran jual</div>
+              </div>
+            </div>
+            <div class="text-sm font-black mono text-blue-300" id="coordTpLine">-</div>
+          </div>
+
+          <!-- ORANGE LINE (TRAILING STOP) -->
+          <div class="bg-amber-950/20 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-3.5 h-1 rounded bg-amber-500 shadow-sm shadow-amber-500/50"></div>
+              <div>
+                <div class="text-xs font-bold text-amber-400">Level Trailing Stop Pengunci Cuan:</div>
+                <div class="text-[10px] text-slate-400">Proteksi profit berjalan</div>
+              </div>
+            </div>
+            <div class="text-sm font-black mono text-amber-300" id="coordTrailingStop">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT LOGBOOK TIMELINE FOR THIS TICKER -->
+      <div class="bg-[#131b2e] border border-slate-800 rounded-2xl p-5 shadow-xl flex-1 flex flex-col">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Arsip Riwayat Emiten Ini</h2>
+        <div class="space-y-2 overflow-y-auto max-h-80 custom-scrollbar pr-1 flex-1" id="timelineList">
+          <div class="text-xs text-slate-400 text-center py-6">Memuat riwayat dari Google Sheets...</div>
+        </div>
+      </div>
+
     </div>
   </main>
 
-  <!-- MODAL: SET POSITION -->
-  <div id="positionModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-tradeDark-900 border border-tradeDark-600 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <h3 class="text-base font-bold text-white mb-1">Pengaturan Posisi Barang (<span id="modalTickerTitle">BBRI</span>)</h3>
-      <p class="text-xs text-slate-400 mb-4">Update status kepemilikan agar sistem dapat mengawal apakah Anda harus HOLD, pasang Trailing Stop, atau EXIT.</p>
+  <!-- MODAL: POSITION MANAGER -->
+  <div id="positionModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-[#131b2e] border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>💼</span> Atur Status Posisi: <span class="mono text-blue-400" id="modalTickerTitle">BBRI</span>
+        </h3>
+        <button onclick="closePositionModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
 
-      <div class="space-y-4">
+      <div class="mt-4 space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Status Kepemilikan</label>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" id="modalPosBtnNo" onclick="toggleModalPosition(false)" class="py-2 px-3 rounded-lg border text-xs font-bold transition bg-blue-600 border-blue-500 text-white">
-              Belum Beli (Cash)
-            </button>
-            <button type="button" id="modalPosBtnYes" onclick="toggleModalPosition(true)" class="py-2 px-3 rounded-lg border text-xs font-bold transition bg-tradeDark-950 border-tradeDark-700 text-slate-400">
-              Sedang Pegang Barang
-            </button>
-          </div>
+          <label class="text-xs font-semibold text-slate-300">Status Kepemilikan Saham</label>
+          <select id="modalStatusSelect" onchange="toggleModalLotFields()" class="w-full mt-1.5 bg-[#0b0f17] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            <option value="CASH">⚪ BELUM PUNYA BARANG (CASH STANDBY)</option>
+            <option value="IN_POSITION">🟢 SEDANG MEMILIKI BARANG (IN POSITION)</option>
+          </select>
         </div>
 
-        <div id="modalPositionInputs" class="space-y-3 hidden">
+        <div id="modalPositionFields" class="space-y-3">
           <div>
-            <label class="block text-xs font-mono text-slate-400 mb-1">Harga Beli Rata-Rata (Avg)</label>
-            <input type="number" id="modalInputAvg" placeholder="Contoh: 2820" class="w-full bg-tradeDark-950 border border-tradeDark-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
+            <label class="text-xs font-semibold text-slate-300">Harga Modal Rata-rata (Avg Buy)</label>
+            <input type="number" id="modalAvgPrice" placeholder="cth: 2840" class="w-full mt-1.5 bg-[#0b0f17] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white mono focus:outline-none focus:border-blue-500">
           </div>
           <div>
-            <label class="block text-xs font-mono text-slate-400 mb-1">Jumlah Lot</label>
-            <input type="number" id="modalInputLot" placeholder="Contoh: 50" class="w-full bg-tradeDark-950 border border-tradeDark-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
+            <label class="text-xs font-semibold text-slate-300">Jumlah Volume (Lot)</label>
+            <input type="number" id="modalLotCount" placeholder="cth: 100" class="w-full mt-1.5 bg-[#0b0f17] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white mono focus:outline-none focus:border-blue-500">
           </div>
         </div>
-      </div>
 
-      <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-tradeDark-700">
-        <button onclick="closePositionModal()" class="px-4 py-2 rounded-lg bg-tradeDark-800 hover:bg-tradeDark-700 text-xs font-semibold text-slate-300 transition">
-          Batal
-        </button>
-        <button onclick="savePositionModal()" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition shadow-md">
-          Simpan Posisi
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: ADD CUSTOM TICKER -->
-  <div id="addTickerModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-tradeDark-900 border border-tradeDark-600 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
-      <h3 class="text-base font-bold text-white mb-1">Tambah Saham Baru ke Watchlist</h3>
-      <p class="text-xs text-slate-400 mb-4">Masukkan 4 huruf kode ticker IHSG (Mendukung hingga 10 saham aktif).</p>
-
-      <div class="space-y-3">
-        <div>
-          <label class="block text-xs font-mono text-slate-400 mb-1">Kode Ticker (Contoh: BMRI, BBNI, ASII, TLKM)</label>
-          <input type="text" id="newTickerCodeInput" maxlength="6" placeholder="BMRI" class="w-full uppercase bg-tradeDark-950 border border-tradeDark-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:border-blue-500 focus:outline-none">
-        </div>
-      </div>
-
-      <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-tradeDark-700">
-        <button onclick="closeAddTickerModal()" class="px-4 py-2 rounded-lg bg-tradeDark-800 hover:bg-tradeDark-700 text-xs font-semibold text-slate-300 transition">
-          Batal
-        </button>
-        <button onclick="confirmAddTicker()" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition shadow-md">
-          Tambahkan
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- FLOATING TOAST -->
-  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-tradeDark-900 border border-blue-500 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-mono flex items-center gap-2 transform translate-y-28 opacity-0 transition-all duration-300">
-    <span id="toastIcon">ℹ️</span>
-    <span id="toastMsg">Status</span>
-  </div>
-
-  <!-- CORE LOGIC & APPS SCRIPT SYNC -->
-  <script>
-    // DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyK7Cp4jdLkMk08Y4-tkRUqRxn2YQOIROYHFrogfo5fYSleGuGRQPR2OsQxQgoTjkAjLg/exec";
-    const LOCAL_STORAGE_KEY = "trading_secretary_cloud_v2";
-
-    // Application State
-    let watchlist = ['BBRI', 'BBCA'];
-    let currentStock = 'BBRI';
-    let store = {}; // ticker keyed object containing state, checkpoints, and history
-
-    // Default template for a stock state
-    function makeStockTemplate(ticker) {
-      return {
-        ticker: ticker,
-        lastPrice: ticker === 'BBRI' ? 2820 : ticker === 'BBCA' ? 10100 : 5000,
-        hasPosition: false,
-        entryPrice: 0,
-        lotSize: 0,
-        currentStatus: 'CASH', // 'CASH', 'BUY_READY', 'IN_POSITION', 'EXITED'
-        entryBox: '-',
-        slLine: '-',
-        tpLine: '-',
-        trailingStop: '-',
-        checkpoints: {
-          1: { image: null, price: 0, target: 0, status: 'Standby', time: null },
-          2: { image: null, price: 0, tape: 'HAKA_DOMINAN', status: 'Standby', time: null },
-          3: { image: null, price: 0, foreign: 'NET_BUY', status: 'Standby', time: null }
-        },
-        directive: {
-          action: 'WAIT & SEE',
-          subtext: 'Lakukan analisis Checkpoint 1 (08:30) untuk menghitung kotak entry.',
-          advice: 'Pagi hari amati respon tembok resistensi pada orderbook sebelum jam bursa dibuka.',
-          updatedAt: 'Hari ini'
-        },
-        carryForwardSummary: 'Belum ada catatan hari sebelumnya.',
-        history: []
-      };
-    }
-
-    // Initialize local store from cache
-    function initStore() {
-      try {
-        const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          store = parsed.store || {};
-          watchlist = parsed.watchlist || ['BBRI', 'BBCA'];
-        }
-      } catch (e) {
-        console.warn("Storage load fallback", e);
-      }
-
-      watchlist.forEach(t => {
-        if (!store[t]) store[t] = makeStockTemplate(t);
-      });
-
-      renderWatchlistBar();
-      renderCurrentStock();
-      syncFromCloud();
-    }
-
-    function saveLocal() {
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-          watchlist: watchlist,
-          store: store
-        }));
-      } catch (e) {
-        console.warn("Local storage write error (image size)", e);
-      }
-    }
-
-    // CLOUD SYNC: FETCH JOURNAL ENTRIES FROM GOOGLE APPS SCRIPT
-    async function syncFromCloud() {
-      setSyncStatus('SYNCING', 'Sinkronisasi Cloud...');
-      try {
-        // Fetch journal records
-        const res = await fetch(`${APPS_SCRIPT_URL}?ticker=${currentStock}`);
-        if (!res.ok) throw new Error("HTTP error " + res.status);
-        const json = await res.json();
-
-        if (json.status === "SUCCESS" && Array.isArray(json.data)) {
-          applyCloudDataToCurrentStock(json.data);
-          setSyncStatus('SUCCESS', 'Tersambung Cloud');
-          showToast(`Data ${currentStock} tersinkronisasi dari Cloud.`, '☁️');
-        } else {
-          setSyncStatus('OFFLINE', 'Lokal Aktif');
-        }
-      } catch (err) {
-        console.warn("Cloud sync warning (using local fallback):", err);
-        setSyncStatus('OFFLINE', 'Lokal (Cloud Offline)');
-      }
-    }
-
-    // CLOUD SYNC: POST CHECKPOINT TO GOOGLE APPS SCRIPT
-    async function sendCheckpointToCloud(payload) {
-      setSyncStatus('SYNCING', 'Menyimpan ke Google Sheets...');
-      try {
-        // Note: Use no-cors or standard POST. Google Apps Script redirection works smoothly with fetch POST JSON
-        await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors', // ensures smooth execution with Google Apps Script redirects
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        setSyncStatus('SUCCESS', 'Tersimpan di Cloud');
-      } catch (err) {
-        console.warn("Cloud save warning:", err);
-        setSyncStatus('OFFLINE', 'Tersimpan Lokal');
-      }
-    }
-
-    function applyCloudDataToCurrentStock(records) {
-      if (!records || records.length === 0) return;
-      const stock = store[currentStock];
-
-      // Sort by date descending
-      records.sort((a, b) => (a.date < b.date ? 1 : -1));
-      const latest = records[0];
-
-      // Check if latest belongs to today
-      const todayStr = new Date().toISOString().slice(0, 10);
-
-      if (latest.date === todayStr) {
-        stock.currentStatus = latest.current_status || stock.currentStatus;
-        stock.hasPosition = (stock.currentStatus === 'IN_POSITION');
-        stock.entryPrice = Number(latest.entry_price) || stock.entryPrice;
-        stock.lotSize = Number(latest.lot_size) || stock.lotSize;
-        stock.entryBox = latest.entry_box || stock.entryBox;
-        stock.slLine = latest.sl_line || stock.slLine;
-        stock.tpLine = latest.tp_line || stock.tpLine;
-        stock.trailingStop = latest.trailing_stop || stock.trailingStop;
-        
-        if (latest.cp1 && Object.keys(latest.cp1).length) stock.checkpoints[1] = latest.cp1;
-        if (latest.cp2 && Object.keys(latest.cp2).length) stock.checkpoints[2] = latest.cp2;
-        if (latest.cp3 && Object.keys(latest.cp3).length) stock.checkpoints[3] = latest.cp3;
-      }
-
-      // Carry forward thesis from yesterday
-      const previous = records.find(r => r.date !== todayStr);
-      if (previous) {
-        stock.carryForwardSummary = `${previous.date}: Status [${previous.current_status}], Target TP: ${previous.tp_line || '-'}, SL: ${previous.sl_line || '-'}. ${previous.daily_closing_summary || ''}`;
-      }
-
-      // Populate history list
-      stock.history = records.map(r => ({
-        id: r.id,
-        date: r.date,
-        checkpoint: `Jurnal Harian (${r.date})`,
-        badge: r.current_status,
-        notes: `Entry: ${r.entry_box || '-'} | SL: ${r.sl_line || '-'} | TP: ${r.tp_line || '-'} | TS: ${r.trailing_stop || '-'}. ${r.daily_closing_summary || ''}`
-      }));
-
-      saveLocal();
-      renderCurrentStock();
-    }
-
-    // UI RENDERERS
-    function renderWatchlistBar() {
-      const container = document.getElementById('tickerChipsContainer');
-      container.innerHTML = watchlist.map(ticker => {
-        const stock = store[ticker] || makeStockTemplate(ticker);
-        const isActive = (ticker === currentStock);
-        const isPos = stock.hasPosition;
-
-        return `
-          <button onclick="switchStock('${ticker}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition border ${
-            isActive 
-              ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/30' 
-              : 'bg-tradeDark-950 text-slate-400 hover:text-white border-tradeDark-800 hover:border-slate-700'
-          }">
-            <span>${ticker}</span>
-            <span class="w-2 h-2 rounded-full ${
-              isPos ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'
-            }"></span>
+        <div class="pt-2 flex gap-2">
+          <button onclick="savePositionState()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition">
+            Simpan Perubahan
           </button>
-        `;
-      }).join('');
+          <button onclick="closePositionModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2.5 rounded-xl transition">
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GEMINI API KEY SETUP -->
+  <div id="apiKeyModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-[#131b2e] border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>🔑</span> Setup Gemini API Key
+        </h3>
+        <button onclick="closeApiKeyModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Masukkan Google AI Studio API Key Anda. Kunci ini disimpan langsung di browser komputer Anda untuk menghubungkan fitur Vision baca chart otomatis.
+        </p>
+        <div>
+          <label class="text-xs font-semibold text-slate-400">Gemini API Key</label>
+          <input type="password" id="inputApiKeyVal" placeholder="AIzaSy..." class="w-full mt-1.5 bg-[#0b0f17] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white mono focus:outline-none focus:border-blue-500">
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button onclick="saveApiKey()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl shadow-lg transition">
+            Simpan Kunci
+          </button>
+          <button onclick="closeApiKeyModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2.5 rounded-xl transition">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC CORE -->
+  <script>
+    // URL DEPLOYED APPS SCRIPT ANDA
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyK7Cp4jdLkMk08Y4-tkRUqRxn2YQOIROYHFrogfo5fYSleGuGRQPR2OsQxQgoTjkAjLg/exec";
+
+    let watchlist = ["BBRI", "BBCA", "BMRI", "TLKM", "PTBA"];
+    let activeTicker = "BBRI";
+    let activeImages = { cp1: null, cp2: null, cp3: null };
+    let tickerStates = {};
+    let cloudJournalRecords = [];
+
+    // INIT
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedLocalSettings();
+      setupPasteListeners();
+      renderTickerBar();
+      updateApiKeyUI();
+      fetchWatchlistAndRecords();
+    });
+
+    function loadSavedLocalSettings() {
+      const savedWl = localStorage.getItem('trading_wl');
+      if (savedWl) try { watchlist = JSON.parse(savedWl); } catch(e){}
+      const savedStates = localStorage.getItem('trading_states');
+      if (savedStates) try { tickerStates = JSON.parse(savedStates); } catch(e){}
+      ensureTickerState(activeTicker);
     }
 
-    function switchStock(ticker) {
-      currentStock = ticker;
-      renderWatchlistBar();
-      renderCurrentStock();
-      syncFromCloud();
+    function ensureTickerState(ticker) {
+      if (!tickerStates[ticker]) {
+        tickerStates[ticker] = {
+          status: "CASH",
+          avg: 0,
+          lot: 0,
+          currentPrice: 0,
+          entryBox: "-",
+          slLine: "-",
+          tpLine: "-",
+          trailingStop: "-",
+          signal: "WAIT & SEE",
+          reason: "Siapkan data Checkpoint 1 Pre-Market."
+        };
+      }
     }
 
-    function renderCurrentStock() {
-      const stock = store[currentStock];
-      document.getElementById('heroTickerTitle').textContent = currentStock;
-      document.getElementById('heroWatermark').textContent = currentStock;
-      document.getElementById('btnTickerTarget').textContent = currentStock;
-      document.getElementById('modalTickerTitle').textContent = currentStock;
+    function renderTickerBar() {
+      const bar = document.getElementById('tickerBar');
+      bar.innerHTML = `<span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Watchlist:</span>`;
+      watchlist.forEach(t => {
+        const btn = document.createElement('button');
+        const isActive = t === activeTicker;
+        btn.className = `text-xs px-3.5 py-1.5 rounded-xl font-bold mono transition flex items-center gap-1.5 ${
+          isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+        }`;
+        btn.innerHTML = `<span>${t}</span>`;
+        btn.onclick = () => selectTicker(t);
+        bar.appendChild(btn);
+      });
+      document.getElementById('activeTickerBtnLabel').innerText = activeTicker;
+      document.getElementById('activeTickerDisplay').innerText = activeTicker;
+      document.getElementById('bgTickerWatermark').innerText = activeTicker;
+      renderActiveTickerUI();
+    }
 
-      // Position hero strip
-      const heroPosStatusBadge = document.getElementById('heroPosStatusBadge');
-      const heroLastPrice = document.getElementById('heroLastPrice');
-      const heroAvgPrice = document.getElementById('heroAvgPrice');
-      const heroLotCount = document.getElementById('heroLotCount');
-      const heroPnlValue = document.getElementById('heroPnlValue');
-      const heroDateStamp = document.getElementById('heroDateStamp');
-
-      heroDateStamp.textContent = new Date().toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
-      heroLastPrice.textContent = `Rp ${Number(stock.lastPrice || 0).toLocaleString('id-ID')}`;
-
-      if (stock.hasPosition && stock.entryPrice > 0) {
-        heroPosStatusBadge.textContent = 'SEDANG MEMEGANG BARANG';
-        heroPosStatusBadge.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
-        heroAvgPrice.textContent = `Rp ${Number(stock.entryPrice).toLocaleString('id-ID')}`;
-        heroLotCount.textContent = `${Number(stock.lotSize).toLocaleString('id-ID')} Lot`;
-
-        const diff = (stock.lastPrice || stock.entryPrice) - stock.entryPrice;
-        const pct = (diff / stock.entryPrice) * 100;
-        const nominal = diff * (stock.lotSize * 100);
-
-        if (diff >= 0) {
-          heroPnlValue.innerHTML = `<span class="text-emerald-400 font-bold">+${pct.toFixed(2)}%</span> <span class="text-[11px] text-slate-400">(+Rp ${Math.abs(nominal).toLocaleString('id-ID')})</span>`;
-        } else {
-          heroPnlValue.innerHTML = `<span class="text-red-400 font-bold">${pct.toFixed(2)}%</span> <span class="text-[11px] text-slate-400">(-Rp ${Math.abs(nominal).toLocaleString('id-ID')})</span>`;
-        }
-      } else {
-        heroPosStatusBadge.textContent = 'BELUM PUNYA BARANG (CASH)';
-        heroPosStatusBadge.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700';
-        heroAvgPrice.textContent = '-';
-        heroLotCount.textContent = '0 Lot';
-        heroPnlValue.innerHTML = `<span class="text-slate-400 font-normal">0.00% (Standby)</span>`;
-      }
-
-      // Carry forward banner
-      document.getElementById('carryForwardText').textContent = stock.carryForwardSummary || 'Belum ada catatan hari sebelumnya. Rencana dimulai di Checkpoint 1.';
-
-      // Checkpoints display
-      for (let cp = 1; cp <= 3; cp++) {
-        const cpData = stock.checkpoints[cp] || {};
-        const badgeEl = document.getElementById(`badgeCp${cp}`);
-        const previewZone = document.getElementById(`previewZone${cp}`);
-        const placeholderZone = document.getElementById(`placeholderZone${cp}`);
-        const imgPreview = document.getElementById(`imgPreview${cp}`);
-
-        if (cpData.status === 'Done') {
-          badgeEl.textContent = `Selesai (${cpData.time || 'Terekam'})`;
-          badgeEl.className = 'text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
-        } else {
-          badgeEl.textContent = 'Standby';
-          badgeEl.className = 'text-[11px] font-mono px-2 py-0.5 rounded bg-tradeDark-950 text-slate-400 border border-tradeDark-700';
-        }
-
-        if (cpData.image) {
-          imgPreview.src = cpData.image;
-          previewZone.classList.remove('hidden');
-          placeholderZone.classList.add('hidden');
-        } else {
-          imgPreview.src = '';
-          previewZone.classList.add('hidden');
-          placeholderZone.classList.remove('hidden');
-        }
-      }
-
-      // Populate input controls
-      document.getElementById('inPrice1').value = stock.checkpoints[1].price || '';
-      document.getElementById('inResist1').value = stock.checkpoints[1].target || '';
-      document.getElementById('inPrice2').value = stock.checkpoints[2].price || '';
-      document.getElementById('inTape2').value = stock.checkpoints[2].tape || 'HAKA_DOMINAN';
-      document.getElementById('inPrice3').value = stock.checkpoints[3].price || '';
-      document.getElementById('inForeign3').value = stock.checkpoints[3].foreign || 'NET_BUY';
-
-      // Directive Card & TradingView Numbers
-      const dir = stock.directive || {};
-      const dirText = document.getElementById('dirText');
-      const dirSubtext = document.getElementById('dirSubtext');
-      const dirBox = document.getElementById('dirBox');
-      const dirUpdateTime = document.getElementById('dirUpdateTime');
-
-      dirText.textContent = dir.action || 'WAIT & SEE';
-      dirSubtext.textContent = dir.subtext || 'Menunggu evaluasi checkpoint.';
-      dirUpdateTime.textContent = dir.updatedAt || 'Hari ini';
-
-      const act = (dir.action || '').toUpperCase();
-      if (act.includes('BELI') || act.includes('BUY') || act.includes('HAKA')) {
-        dirText.className = 'text-3xl font-black font-mono tracking-tight text-emerald-400';
-        dirBox.className = 'my-4 p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/40 text-center';
-      } else if (act.includes('HOLD') || act.includes('KAWAL')) {
-        dirText.className = 'text-3xl font-black font-mono tracking-tight text-blue-400';
-        dirBox.className = 'my-4 p-4 rounded-xl bg-blue-950/20 border border-blue-500/40 text-center';
-      } else if (act.includes('CUT') || act.includes('LEPAS') || act.includes('EXIT')) {
-        dirText.className = 'text-3xl font-black font-mono tracking-tight text-red-400';
-        dirBox.className = 'my-4 p-4 rounded-xl bg-red-950/20 border border-red-500/40 text-center';
-      } else {
-        dirText.className = 'text-3xl font-black font-mono tracking-tight text-amber-400';
-        dirBox.className = 'my-4 p-4 rounded-xl bg-amber-950/20 border border-amber-500/40 text-center';
-      }
-
-      document.getElementById('tvEntryZone').textContent = stock.entryBox || '-';
-      document.getElementById('tvStopLoss').textContent = stock.slLine || '-';
-      document.getElementById('tvTakeProfit').textContent = stock.tpLine || '-';
-      document.getElementById('tvTrailingStop').textContent = stock.trailingStop || '-';
-      document.getElementById('secBriefText').textContent = dir.advice || '"Sekretaris siap memandu jalannya sesi bursa hari ini."';
-
+    function selectTicker(ticker) {
+      activeTicker = ticker;
+      ensureTickerState(ticker);
+      renderTickerBar();
       renderTimeline();
+    }
+
+    function renderActiveTickerUI() {
+      const state = tickerStates[activeTicker];
+      const badge = document.getElementById('badgePositionStatus');
+      const valAvg = document.getElementById('valAvgPrice');
+      const valLot = document.getElementById('valLotCount');
+      const valPnl = document.getElementById('valFloatingPnl');
+
+      if (state.status === "IN_POSITION" && state.avg > 0) {
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        badge.innerText = "SEDANG PEGANG BARANG";
+        valAvg.innerText = "Rp " + Number(state.avg).toLocaleString();
+        valLot.innerText = Number(state.lot).toLocaleString() + " Lot";
+
+        if (state.currentPrice > 0) {
+          const diffPct = ((state.currentPrice - state.avg) / state.avg) * 100;
+          valPnl.className = `text-sm font-bold mono ${diffPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+          valPnl.innerText = `${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(2)}%`;
+        } else {
+          valPnl.innerText = "Terkawal";
+        }
+      } else {
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700";
+        badge.innerText = "BELUM PUNYA BARANG (CASH)";
+        valAvg.innerText = "-";
+        valLot.innerText = "0 Lot";
+        valPnl.innerText = "0.00% (Standby)";
+        valPnl.className = "text-sm font-bold mono text-slate-400";
+      }
+
+      document.getElementById('actionSignalText').innerText = state.signal || "WAIT & SEE";
+      document.getElementById('actionSignalReason').innerText = state.reason || "Lakukan analisa Checkpoint 1.";
+      document.getElementById('coordEntryBox').innerText = state.entryBox || "-";
+      document.getElementById('coordSlLine').innerText = state.slLine || "-";
+      document.getElementById('coordTpLine').innerText = state.tpLine || "-";
+      document.getElementById('coordTrailingStop').innerText = state.trailingStop || "-";
+    }
+
+    // CLOUD DATABASE SYNC (APPS SCRIPT)
+    async function fetchWatchlistAndRecords() {
+      try {
+        const resp = await fetch(`${SCRIPT_URL}?type=all`);
+        const json = await resp.json();
+        if (json.status === "SUCCESS") {
+          if (json.watchlist && json.watchlist.length > 0) {
+            watchlist = Array.from(new Set([...watchlist, ...json.watchlist]));
+            localStorage.setItem('trading_wl', JSON.stringify(watchlist));
+            renderTickerBar();
+          }
+          if (json.data) {
+            cloudJournalRecords = json.data;
+            renderTimeline();
+            inspectLastDayContext();
+          }
+        }
+      } catch (err) {
+        console.warn("Cloud sync offline/delay:", err);
+      }
+    }
+
+    function inspectLastDayContext() {
+      const records = cloudJournalRecords.filter(r => r.ticker === activeTicker);
+      if (records.length > 0) {
+        const latest = records[records.length - 1];
+        document.getElementById('continuityText').innerText = 
+          `Status Terakhir (${latest.date}): ${latest.current_status}. Target: ${latest.tp_line || '-'}, SL: ${latest.sl_line || '-'}. ${latest.daily_closing_summary || ''}`;
+      }
     }
 
     function renderTimeline() {
       const container = document.getElementById('timelineList');
-      const history = store[currentStock].history || [];
-      document.getElementById('archiveCountBadge').textContent = `${history.length} entri`;
-
-      if (history.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-8 text-xs text-slate-500 font-mono">
-            Belum ada arsip riwayat cloud untuk ${currentStock}.
+      const filtered = cloudJournalRecords.filter(r => r.ticker === activeTicker);
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 text-center py-6">Belum ada arsip untuk ${activeTicker}.</div>`;
+        return;
+      }
+      container.innerHTML = "";
+      filtered.slice().reverse().forEach(item => {
+        const div = document.createElement('div');
+        div.className = "bg-[#0b0f17] border border-slate-800 rounded-xl p-3 text-xs space-y-1.5";
+        div.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-200 mono">${item.date}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.current_status === 'IN_POSITION' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-300'}">${item.current_status}</span>
+          </div>
+          <div class="grid grid-cols-3 gap-1 text-[11px] mono pt-1 text-slate-400">
+            <div>Entry: <span class="text-emerald-400">${item.entry_box || '-'}</span></div>
+            <div>SL: <span class="text-rose-400">${item.sl_line || '-'}</span></div>
+            <div>TP: <span class="text-blue-400">${item.tp_line || '-'}</span></div>
           </div>
         `;
+        container.appendChild(div);
+      });
+    }
+
+    // PASTE HANDLING (CTRL+V)
+    let currentPasteTarget = 'cp1';
+    function triggerPastePrompt(target) {
+      currentPasteTarget = target;
+      document.getElementById(`drop_${target}`).focus();
+    }
+
+    function setupPasteListeners() {
+      ['drop_cp1', 'drop_cp2', 'drop_cp3'].forEach((id, idx) => {
+        const cpKey = `cp${idx+1}`;
+        const elem = document.getElementById(id);
+        elem.addEventListener('paste', (e) => {
+          const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+          for (let item of items) {
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+              const file = item.getAsFile();
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                activeImages[cpKey] = event.target.result;
+                const preview = document.getElementById(`preview_${cpKey}`);
+                preview.src = event.target.result;
+                preview.classList.remove('hidden');
+                document.getElementById(`${cpKey}_badge`).innerText = "Gambar Terpasang";
+                document.getElementById(`${cpKey}_badge`).className = "text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30";
+              };
+              reader.readAsDataURL(file);
+              e.preventDefault();
+              break;
+            }
+          }
+        });
+      });
+    }
+
+    // GEMINI VISION API INTEGRATION
+    async function runGeminiVisionAnalysis(cpKey) {
+      const apiKey = localStorage.getItem('gemini_api_key');
+      if (!apiKey) {
+        openApiKeyModal();
+        alert("Silakan masukkan Google AI Studio API Key terlebih dahulu.");
         return;
       }
 
-      container.innerHTML = history.slice(0, 10).map(item => `
-        <div class="p-3 rounded-xl bg-tradeDark-950 border border-tradeDark-700/80 text-xs space-y-1 transition hover:border-slate-600">
-          <div class="flex items-center justify-between">
-            <span class="font-mono font-bold text-slate-300 text-[11px]">${item.date || ''} • ${item.checkpoint}</span>
-            <span class="font-mono text-[10px] px-1.5 py-0.5 rounded ${
-              (item.badge === 'IN_POSITION' || item.badge === 'BUY') ? 'bg-emerald-500/20 text-emerald-400' :
-              item.badge === 'HOLD' ? 'bg-blue-500/20 text-blue-400' :
-              (item.badge === 'EXIT' || item.badge === 'EXITED') ? 'bg-red-500/20 text-red-400' :
-              'bg-slate-700 text-slate-300'
-            }">${item.badge}</span>
-          </div>
-          <p class="text-slate-300 font-sans leading-relaxed text-[11px]">${item.notes}</p>
-        </div>
-      `).join('');
-    }
+      const imgBase64Full = activeImages[cpKey];
+      if (!imgBase64Full) {
+        alert("Silakan tempel (Ctrl+V) screenshot Stockbit di kotak checkpoint ini terlebih dahulu!");
+        return;
+      }
 
-    // CHECKPOINT COMMIT ENGINE
-    async function commitCheckpoint(cp) {
-      const stock = store[currentStock];
-      const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
-      const dateStr = new Date().toISOString().slice(0, 10);
+      const btn = document.getElementById(cpKey === 'cp1' ? 'btnAiCp1' : cpKey === 'cp2' ? 'btnAiCp2' : 'btnAiCp3');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span>⏳</span> Menganalisis Gambar...`;
+      btn.disabled = true;
 
-      if (cp === 1) {
-        const price = parseInt(document.getElementById('inPrice1').value) || stock.lastPrice || 2820;
-        const resist = parseInt(document.getElementById('inResist1').value) || (price + 80);
+      try {
+        const base64Data = imgBase64Full.split(',')[1];
+        const mimeType = imgBase64Full.split(';')[0].split(':')[1];
 
-        stock.lastPrice = price;
-        stock.checkpoints[1].price = price;
-        stock.checkpoints[1].target = resist;
-        stock.checkpoints[1].status = 'Done';
-        stock.checkpoints[1].time = timeStr;
+        const promptText = `
+Anda adalah Sekretaris Trading Saham Indonesia profesional untuk saham: ${activeTicker}.
+Analisis screenshot Stockbit ini (Orderbook, Chart Bollinger Band + ADX, dan Broker Summary).
+Berikan output HANYA format JSON murni tanpa markdown, tanpa backtick:
+{
+  "current_price": 2840,
+  "signal": "BUY AKUMULASI" | "WAIT & SEE" | "HOLD" | "CUT LOSS",
+  "reason": "Alasan singkat 1 kalimat berbasis bandarmologi dan support",
+  "entry_box": "2820 - 2850",
+  "sl_line": 2800,
+  "tp_line": 2920,
+  "trailing_stop": 2860
+}
+`;
 
-        // Formula Big Bank standard
-        const entryLow = Math.round((price * 0.993) / 5) * 5;
-        const entryHigh = price;
-        const stopLoss = Math.round((price * 0.982) / 5) * 5;
-        const tp1 = resist;
-
-        stock.entryBox = `${entryLow} - ${entryHigh}`;
-        stock.slLine = `${stopLoss}`;
-        stock.tpLine = `${tp1}`;
-        stock.currentStatus = stock.hasPosition ? 'IN_POSITION' : 'BUY_READY';
-
-        stock.directive = {
-          action: stock.hasPosition ? 'HOLD & KAWAL TARGET' : 'PASANG ANTREAN (BUY ZONE)',
-          subtext: `Peta pre-market aktif. Kotak hijau di ${stock.entryBox}, batasi resiko di ${stopLoss}.`,
-          advice: stock.hasPosition
-            ? `Posisi Anda aktif dari ${stock.entryPrice}. Target resistensi di ${resist}. Jangan jual cepat sebelum ada guyuran.`
-            : `Pasang jemuran bertahap di kotak ${stock.entryBox}. Tunggu konfirmasi volume 09:30.`,
-          updatedAt: `${timeStr}`
+        const requestBody = {
+          contents: [{
+            parts: [
+              { text: promptText },
+              { inline_data: { mime_type: mimeType, data: base64Data } }
+            ]
+          }]
         };
 
-      } else if (cp === 2) {
-        const price = parseInt(document.getElementById('inPrice2').value) || stock.lastPrice;
-        const tape = document.getElementById('inTape2').value;
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
 
-        stock.lastPrice = price;
-        stock.checkpoints[2].price = price;
-        stock.checkpoints[2].tape = tape;
-        stock.checkpoints[2].status = 'Done';
-        stock.checkpoints[2].time = timeStr;
+        const result = await resp.json();
+        const rawResponse = result.candidates[0].content.parts[0].text;
+        const cleanedJson = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleanedJson);
 
-        if (tape === 'HAKA_DOMINAN') {
-          stock.currentStatus = stock.hasPosition ? 'IN_POSITION' : 'BUY_READY';
-          stock.directive.action = stock.hasPosition ? 'HOLD (MOMENTUM VALID)' : 'TRIGGER BUY (HAKA)';
-          stock.directive.subtext = 'Volume terkonfirmasi tebal. Tembok offer dimakan pembeli secara agresif.';
-          stock.directive.advice = stock.hasPosition 
-            ? `Momentum sangat kuat. Biarkan berlari menuju target ${stock.tpLine}.` 
-            : `Boleh eksekusi di harga running ${price} dengan batas pengaman ${stock.slLine}.`;
-        } else if (tape === 'GUYUR_HAKI') {
-          stock.directive.action = stock.hasPosition ? 'CUT LOSS / AMANKAN' : 'BATALKAN ANTREAN (WAIT)';
-          stock.directive.subtext = 'Terjadi cabut antrean bid dan guyur kiri masif.';
-          stock.directive.advice = stock.hasPosition
-            ? `Tekanan jual meningkat. Segera amankan posisi jika menjebol garis merah ${stock.slLine}.`
-            : `Batal beli. Jangan tangkap pisau jatuh sebelum terbentuk konsolidasi baru.`;
-        } else {
-          stock.directive.action = 'TUNGGU (NETRAL)';
-          stock.directive.subtext = 'Volume stabil, belum ada pihak dominan.';
-          stock.directive.advice = 'Disiplin menunggu di kotak hijau, jangan mengejar harga.';
-        }
+        // Update state
+        const state = tickerStates[activeTicker];
+        state.currentPrice = parsed.current_price || state.currentPrice;
+        state.signal = parsed.signal;
+        state.reason = parsed.reason;
+        state.entryBox = parsed.entry_box || state.entryBox;
+        state.slLine = parsed.sl_line || state.slLine;
+        state.tpLine = parsed.tp_line || state.tpLine;
+        state.trailingStop = parsed.trailing_stop || state.trailingStop;
 
-      } else if (cp === 3) {
-        const price = parseInt(document.getElementById('inPrice3').value) || stock.lastPrice;
-        const flow = document.getElementById('inForeign3').value;
+        localStorage.setItem('trading_states', JSON.stringify(tickerStates));
+        renderActiveTickerUI();
 
-        stock.lastPrice = price;
-        stock.checkpoints[3].price = price;
-        stock.checkpoints[3].foreign = flow;
-        stock.checkpoints[3].status = 'Done';
-        stock.checkpoints[3].time = timeStr;
+        // Push ke Google Sheet
+        saveRecordToSheets({
+          ticker: activeTicker,
+          date: new Date().toISOString().split('T')[0],
+          current_status: state.status,
+          entry_price: state.avg,
+          lot_size: state.lot,
+          entry_box: state.entryBox,
+          sl_line: state.slLine,
+          tp_line: state.tpLine,
+          trailing_stop: state.trailingStop,
+          daily_closing_summary: state.reason
+        });
 
-        if (stock.hasPosition) {
-          if (flow === 'NET_BUY') {
-            const newTS = Math.max(stock.entryPrice, price - 20);
-            stock.trailingStop = `${newTS}`;
-            stock.directive.action = 'HOLD SAMPAI TUTUP';
-            stock.directive.subtext = `Arus asing akumulasi berlanjut. Trailing stop dikunci di ${newTS}.`;
-            stock.directive.advice = `Naikkan batas SL menjadi ${newTS} (Trailing Stop). Cuan Anda sudah terlindungi penuh.`;
-          } else if (flow === 'NET_SELL') {
-            stock.directive.action = 'AMANKAN CUAN / JUAL';
-            stock.directive.subtext = 'Terjadi aksi distribusi asing di sesi siang.';
-            stock.directive.advice = `Realisasikan profit di harga running ${price} sebelum penutupan bursa.`;
-          } else {
-            stock.directive.action = 'HOLD DENGAN DISIPLIN';
-            stock.directive.subtext = 'Gerak pasar tenang. Pertahankan hingga penutupan.';
-            stock.directive.advice = `Pertahankan posisi selama bertahan di atas batas ${stock.slLine}.`;
-          }
-        } else {
-          stock.directive.action = (flow === 'NET_BUY') ? 'TITIP SANDAL SORE' : 'TETAP CASH';
-          stock.directive.subtext = (flow === 'NET_BUY') ? 'Akumulasi asing stabil hari ini.' : 'Belum ada setup menarik sore ini.';
-          stock.directive.advice = 'Evaluasi penutupan untuk persiapan checkpoint pre-market esok pagi.';
-        }
+        alert(`Analisis Gemini AI Selesai!\nSinyal: ${parsed.signal}\nEntry Box: ${parsed.entry_box}\nSL: ${parsed.sl_line} | TP: ${parsed.tp_line}`);
+      } catch (err) {
+        alert("Gagal memanggil Gemini API: " + err.message);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
       }
-
-      // Add to current stock memory history
-      stock.history.unshift({
-        id: `${dateStr}_${stock.ticker}_cp${cp}`,
-        date: dateStr,
-        checkpoint: `Checkpoint ${cp} (${timeStr})`,
-        badge: stock.directive.action.includes('BUY') ? 'BUY' : stock.directive.action.includes('HOLD') ? 'HOLD' : stock.directive.action.includes('LEPAS') ? 'EXIT' : 'PLAN',
-        notes: `Harga: ${stock.lastPrice}. Keputusan: ${stock.directive.action}. SL: ${stock.slLine}, TP: ${stock.tpLine}.`
-      });
-
-      saveLocal();
-      renderCurrentStock();
-
-      // Cloud payload dispatch
-      const cloudPayload = {
-        action: "SAVE_CHECKPOINT",
-        date: dateStr,
-        ticker: stock.ticker,
-        current_status: stock.hasPosition ? "IN_POSITION" : stock.currentStatus,
-        entry_price: stock.entryPrice || "",
-        lot_size: stock.lotSize || "",
-        entry_box: stock.entryBox || "",
-        sl_line: stock.slLine || "",
-        tp_line: stock.tpLine || "",
-        trailing_stop: stock.trailingStop || "",
-        cp1: stock.checkpoints[1],
-        cp2: stock.checkpoints[2],
-        cp3: stock.checkpoints[3],
-        daily_closing_summary: stock.directive.advice
-      };
-
-      await sendCheckpointToCloud(cloudPayload);
-      showToast(`Checkpoint ${cp} (${currentStock}) tersimpan di Google Sheets!`, '🚀');
     }
 
-    // IMAGE UPLOAD & CLIPBOARD HANDLING
-    function triggerFilePick(cp) {
-      document.getElementById(`fileInput${cp}`).click();
-    }
-
-    function handleImagePicked(e, cp) {
-      const file = e.target.files[0];
-      if (file) handleImageFile(file, cp);
-    }
-
-    function handleImageFile(file, cp) {
-      if (!file.type.startsWith('image/')) {
-        showToast('Hanya format file gambar yang didukung.', '❌');
-        return;
+    async function saveRecordToSheets(payload) {
+      try {
+        payload.action = "SAVE_CHECKPOINT";
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        console.error("Save to sheets err:", e);
       }
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        store[currentStock].checkpoints[cp].image = evt.target.result;
-        saveLocal();
-        renderCurrentStock();
-        showToast(`Screenshot Checkpoint ${cp} berhasil dipasang!`, '📷');
-      };
-      reader.readAsDataURL(file);
     }
 
-    function clearImage(e, cp) {
-      e.stopPropagation();
-      store[currentStock].checkpoints[cp].image = null;
-      saveLocal();
-      renderCurrentStock();
-      showToast(`Gambar Checkpoint ${cp} dihapus.`, '🗑️');
+    // MODALS & INPUT HANDLERS
+    function openApiKeyModal() {
+      document.getElementById('inputApiKeyVal').value = localStorage.getItem('gemini_api_key') || "";
+      document.getElementById('apiKeyModal').classList.remove('hidden');
     }
-
-    // GLOBAL CTRL+V LISTENER
-    window.addEventListener('paste', function(e) {
-      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-      let blob = null;
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') === 0) {
-          blob = items[i].getAsFile();
-          break;
-        }
+    function closeApiKeyModal() { document.getElementById('apiKeyModal').classList.add('hidden'); }
+    function saveApiKey() {
+      const val = document.getElementById('inputApiKeyVal').value.trim();
+      if (val) {
+        localStorage.setItem('gemini_api_key', val);
+        updateApiKeyUI();
+        closeApiKeyModal();
+        alert("API Key tersimpan aman.");
       }
-
-      if (blob) {
-        const hour = new Date().getHours() + (new Date().getMinutes() / 60);
-        let targetCp = 1;
-        if (hour >= 9.25 && hour < 12.0) targetCp = 2;
-        else if (hour >= 12.0) targetCp = 3;
-
-        handleImageFile(blob, targetCp);
+    }
+    function updateApiKeyUI() {
+      const key = localStorage.getItem('gemini_api_key');
+      const label = document.getElementById('apiKeyStatusLabel');
+      if (key) {
+        label.innerText = "Gemini AI Siap";
+        label.parentElement.className = "text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5";
       }
-    });
-
-    // POSITION MODAL LOGIC
-    let modalHasPos = false;
+    }
 
     function openPositionModal() {
-      const stock = store[currentStock];
-      modalHasPos = !!stock.hasPosition;
-      toggleModalPosition(modalHasPos);
-
-      document.getElementById('modalInputAvg').value = stock.entryPrice || '';
-      document.getElementById('modalInputLot').value = stock.lotSize || '';
+      ensureTickerState(activeTicker);
+      const state = tickerStates[activeTicker];
+      document.getElementById('modalTickerTitle').innerText = activeTicker;
+      document.getElementById('modalStatusSelect').value = state.status;
+      document.getElementById('modalAvgPrice').value = state.avg || "";
+      document.getElementById('modalLotCount').value = state.lot || "";
+      toggleModalLotFields();
       document.getElementById('positionModal').classList.remove('hidden');
     }
-
-    function closePositionModal() {
-      document.getElementById('positionModal').classList.add('hidden');
+    function closePositionModal() { document.getElementById('positionModal').classList.add('hidden'); }
+    function toggleModalLotFields() {
+      const isPos = document.getElementById('modalStatusSelect').value === "IN_POSITION";
+      document.getElementById('modalPositionFields').style.display = isPos ? 'block' : 'none';
     }
-
-    function toggleModalPosition(hasPos) {
-      modalHasPos = hasPos;
-      const btnNo = document.getElementById('modalPosBtnNo');
-      const btnYes = document.getElementById('modalPosBtnYes');
-      const inputs = document.getElementById('modalPositionInputs');
-
-      if (hasPos) {
-        btnYes.className = 'py-2 px-3 rounded-lg border text-xs font-bold transition bg-blue-600 border-blue-500 text-white';
-        btnNo.className = 'py-2 px-3 rounded-lg border text-xs font-bold transition bg-tradeDark-950 border-tradeDark-700 text-slate-400';
-        inputs.classList.remove('hidden');
+    function savePositionState() {
+      const state = tickerStates[activeTicker];
+      state.status = document.getElementById('modalStatusSelect').value;
+      if (state.status === "IN_POSITION") {
+        state.avg = Number(document.getElementById('modalAvgPrice').value) || 0;
+        state.lot = Number(document.getElementById('modalLotCount').value) || 0;
       } else {
-        btnNo.className = 'py-2 px-3 rounded-lg border text-xs font-bold transition bg-blue-600 border-blue-500 text-white';
-        btnYes.className = 'py-2 px-3 rounded-lg border text-xs font-bold transition bg-tradeDark-950 border-tradeDark-700 text-slate-400';
-        inputs.classList.add('hidden');
+        state.avg = 0;
+        state.lot = 0;
       }
-    }
-
-    async function savePositionModal() {
-      const stock = store[currentStock];
-      stock.hasPosition = modalHasPos;
-
-      if (modalHasPos) {
-        stock.entryPrice = parseInt(document.getElementById('modalInputAvg').value) || stock.lastPrice || 0;
-        stock.lotSize = parseInt(document.getElementById('modalInputLot').value) || 0;
-        stock.currentStatus = 'IN_POSITION';
-      } else {
-        stock.entryPrice = 0;
-        stock.lotSize = 0;
-        stock.currentStatus = 'CASH';
-      }
-
-      saveLocal();
-      renderWatchlistBar();
-      renderCurrentStock();
+      localStorage.setItem('trading_states', JSON.stringify(tickerStates));
+      renderActiveTickerUI();
       closePositionModal();
 
-      // Cloud notification
-      const todayStr = new Date().toISOString().slice(0, 10);
-      await sendCheckpointToCloud({
-        action: "SAVE_CHECKPOINT",
-        date: todayStr,
-        ticker: stock.ticker,
-        current_status: stock.currentStatus,
-        entry_price: stock.entryPrice,
-        lot_size: stock.lotSize,
-        entry_box: stock.entryBox,
-        sl_line: stock.slLine,
-        tp_line: stock.tpLine,
-        trailing_stop: stock.trailingStop,
-        daily_closing_summary: `Status diperbarui menjadi ${stock.currentStatus} di harga ${stock.entryPrice}.`
+      saveRecordToSheets({
+        ticker: activeTicker,
+        date: new Date().toISOString().split('T')[0],
+        current_status: state.status,
+        entry_price: state.avg,
+        lot_size: state.lot,
+        entry_box: state.entryBox,
+        sl_line: state.slLine,
+        tp_line: state.tpLine,
+        trailing_stop: state.trailingStop,
+        daily_closing_summary: `Update posisi manual: ${state.status}`
       });
-
-      showToast(`Posisi ${currentStock} tersimpan & sinkron ke Cloud!`, '💼');
     }
 
-    // ADD NEW TICKER LOGIC (UP TO 10 STOCKS)
-    function openAddTickerModal() {
-      if (watchlist.length >= 10) {
-        showToast('Batas maksimum 10 saham watchlist tercapai.', '⚠️');
-        return;
-      }
-      document.getElementById('newTickerCodeInput').value = '';
-      document.getElementById('addTickerModal').classList.remove('hidden');
-    }
-
-    function closeAddTickerModal() {
-      document.getElementById('addTickerModal').classList.add('hidden');
-    }
-
-    function confirmAddTicker() {
-      const input = document.getElementById('newTickerCodeInput');
-      const code = input.value.trim().toUpperCase();
-
-      if (!code || code.length < 4) {
-        showToast('Masukkan kode ticker yang valid (4 huruf).', '❌');
-        return;
-      }
-
-      if (watchlist.includes(code)) {
-        showToast(`Saham ${code} sudah ada di watchlist.`, 'ℹ️');
-        switchStock(code);
-        closeAddTickerModal();
-        return;
-      }
-
-      watchlist.push(code);
-      store[code] = makeStockTemplate(code);
-      saveLocal();
-      renderWatchlistBar();
-      switchStock(code);
-      closeAddTickerModal();
-      showToast(`Saham ${code} ditambahkan ke daftar pantau!`, '🎉');
-    }
-
-    // UI STATUS INDICATORS
-    function setSyncStatus(state, label) {
-      const dot = document.getElementById('syncDot');
-      const text = document.getElementById('syncText');
-      text.textContent = label;
-
-      if (state === 'SYNCING') {
-        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
-      } else if (state === 'SUCCESS') {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-      } else {
-        dot.className = 'w-2 h-2 rounded-full bg-slate-500';
-      }
-    }
-
-    function showToast(msg, icon = 'ℹ️') {
-      const toast = document.getElementById('toast');
-      document.getElementById('toastMsg').textContent = msg;
-      document.getElementById('toastIcon').textContent = icon;
-
-      toast.classList.remove('translate-y-28', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-
-      setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-28', 'opacity-0');
-      }, 3500);
-    }
-
-    // Drag and drop attachment
-    [1, 2, 3].forEach(cp => {
-      const zone = document.getElementById(`boxCp${cp}`);
-      if (!zone) return;
-      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('border-blue-500'); });
-      zone.addEventListener('dragleave', (e) => { e.preventDefault(); zone.classList.remove('border-blue-500'); });
-      zone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        zone.classList.remove('border-blue-500');
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-          handleImageFile(e.dataTransfer.files[0], cp);
+    function addNewTickerPrompt() {
+      const val = prompt("Masukkan kode saham baru (cth: ASII, BBNI, INKP):");
+      if (val) {
+        const clean = val.trim().toUpperCase();
+        if (!watchlist.includes(clean)) {
+          watchlist.push(clean);
+          localStorage.setItem('trading_wl', JSON.stringify(watchlist));
+          selectTicker(clean);
         }
-      });
-    });
-
-    // Booting on load
-    window.onload = function() {
-      initStore();
-    };
+      }
+    }
   </script>
 </body>
 </html>
