@@ -354,9 +354,9 @@
     function renderActiveTickerUI() {
       const state = tickerStates[activeTicker];
 
-      document.getElementById('activeTickerDisplay').innerText = activeTicker;
-      document.getElementById('txtPosisiTicker').innerText = activeTicker;
-      document.getElementById('modalTickerTitle').innerText = activeTicker;
+     document.getElementById('txtSlLine').innerText = (state.slLine && !isNaN(state.slLine)) ? `Rp ${Number(state.slLine).toLocaleString('id-ID')}` : (state.slLine || '-');
+      document.getElementById('txtTpLine').innerText = (state.tpLine && !isNaN(state.tpLine)) ? `Rp ${Number(state.tpLine).toLocaleString('id-ID')}` : (state.tpLine || '-');
+      document.getElementById('txtTrailingStop').innerText = (state.trailingStop && !isNaN(state.trailingStop)) ? `Rp ${Number(state.trailingStop).toLocaleString('id-ID')}` : (state.trailingStop || '-');
 
       const pBadge = document.getElementById('posisiBadge');
       if (state.status === "HOLD") {
