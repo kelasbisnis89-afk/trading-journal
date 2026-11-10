@@ -549,15 +549,8 @@
         });
       });
     }
-// GEMINI VISION API DENGAN SISTEM CADANGAN (AUTO-FALLBACK)
+// PANGGILAN ANALISIS VISION VIA GOOGLE APPS SCRIPT BACKEND
     async function runGeminiVisionAnalysis(cpKey) {
-      const apiKey = localStorage.getItem('gemini_api_key');
-      if (!apiKey) {
-        openApiKeyModal();
-        alert("Silakan masukkan Google AI Studio API Key terlebih dahulu.");
-        return;
-      }
-
       const imgBase64Full = activeImages[cpKey];
       if (!imgBase64Full) {
         alert("Silakan klik kotak checkpoint lalu paste (Ctrl+V) screenshot Stockbit terlebih dahulu!");
@@ -566,7 +559,7 @@
 
       const btn = document.getElementById(cpKey === 'cp1' ? 'btnAiCp1' : cpKey === 'cp2' ? 'btnAiCp2' : 'btnAiCp3');
       const originalText = btn.innerHTML;
-      btn.innerHTML = '<span>⏳</span> Menganalisis...';
+      btn.innerHTML = '<span>⏳</span> Menganalisis Orderbook & Broksum via AI...';
       btn.disabled = true;
 
       try {
@@ -574,69 +567,25 @@
         const mimeType = parts[0].match(/:(.*?);/)[1];
         const base64Data = parts[1];
 
-        const promptText = `Peran: Anda Sekretaris Trading Saham profesional untuk emiten: ${activeTicker}.
-Analisis gambar ini (Orderbook, Chart BB/ADX, Broker Summary).
-Keluarkan HANYA JSON murni tanpa markdown, tanpa teks pembuka/penutup:
-{
-  "current_price": 2840,
-  "signal": "BUY AKUMULASI",
-  "reason": "Penjelasan ringkas 1 kalimat aksi",
-  "entry_box": "2820 - 2850",
-  "sl_line": 2800,
-  "tp_line": 2920,
-  "trailing_stop": 2860
-}`;
+        // Kirim gambar ke Google Apps Script backend
+        const resp = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action: "ANALYZE_VISION",
+            ticker: activeTicker,
+            image_data: base64Data,
+            mime_type: mimeType
+          })
+        });
 
-        // Daftar model prioritas; jika model pertama sibuk, otomatis beralih ke cadangan
-        const candidateModels = [
-          "gemini-2.0-flash",
-          "gemini-2.0-flash-lite",
-          "gemini-flash-latest"
-         
-        ];
+        const res = await resp.json();
 
-        let result = null;
-        let lastError = null;
-
-        for (const modelName of candidateModels) {
-          try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-            const resp = await fetch(url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{
-                  parts: [
-                    { text: promptText },
-                    { inline_data: { mime_type: mimeType, data: base64Data } }
-                  ]
-                }]
-              })
-            });
-
-            const jsonResp = await resp.json();
-            if (jsonResp.error) {
-              lastError = jsonResp.error.message || JSON.stringify(jsonResp.error);
-              continue; // Coba model cadangan berikutnya jika terjadi overload
-            }
-
-            if (jsonResp.candidates && jsonResp.candidates[0] && jsonResp.candidates[0].content) {
-              result = jsonResp;
-              break; // Berhasil mendapatkan analisis
-            }
-          } catch (e) {
-            lastError = e.message;
-          }
+        if (res.status !== "SUCCESS") {
+          throw new Error(res.message || "Gagal menganalisis gambar.");
         }
 
-        if (!result) {
-          throw new Error(lastError || "Semua antrean model sedang penuh. Silakan coba sesaat lagi.");
-        }
-
-        let raw = result.candidates[0].content.parts[0].text;
-        raw = raw.replace(/```json/gi, '').replace(/```/gi, '').trim();
-        const parsed = JSON.parse(raw);
-
+        const parsed = res.data;
         const state = tickerStates[activeTicker];
         if (parsed.current_price) state.currentPrice = parsed.current_price;
         state.signal = parsed.signal || "WAIT & SEE";
@@ -649,6 +598,7 @@ Keluarkan HANYA JSON murni tanpa markdown, tanpa teks pembuka/penutup:
         localStorage.setItem('trading_states', JSON.stringify(tickerStates));
         renderActiveTickerUI();
 
+        // Simpan langsung ke sheet
         saveRecordToSheets({
           ticker: activeTicker,
           date: new Date().toISOString().split('T')[0],
@@ -662,9 +612,9 @@ Keluarkan HANYA JSON murni tanpa markdown, tanpa teks pembuka/penutup:
           daily_closing_summary: state.reason
         });
 
-        alert(`Analisis Gemini AI Berhasil!\n\nSinyal: ${parsed.signal}\nEntry Box: ${parsed.entry_box}\nSL: ${parsed.sl_line} | TP: ${parsed.tp_line}`);
+        alert(`Analisis Vision Selesai!\n\nSinyal: ${parsed.signal}\nEntry Box: ${parsed.entry_box}\nSL: ${parsed.sl_line} | TP: ${parsed.tp_line}\n\nCatatan: ${parsed.reason}`);
       } catch (err) {
-        alert("Gagal memanggil Gemini API:\n" + err.message);
+        alert("Gagal memproses analisis: " + err.message);
       } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
